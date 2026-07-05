@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nox-agent-os"
+version = "0.1.2"
+description = "Local agent OS with governed workspaces."
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+  "typer>=0.16.0",
+]
+
+[project.optional-dependencies]
+api = [
+  "fastapi>=0.116.0",
+  "uvicorn>=0.35.0",
+]
+llama = []
+openai = []
+installer = [
+  "pyinstaller>=6.21.0",
+]
+dev = [
+  "pytest>=8.0.0",
+]
+all = [
+  "fastapi>=0.116.0",
+  "uvicorn>=0.35.0",
+  "pytest>=8.0.0",
+  "pyinstaller>=6.21.0",
+]
+
+[project.scripts]
+nox = "nox_agent_os.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nox_agent_os"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
