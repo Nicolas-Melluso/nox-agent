@@ -21,6 +21,7 @@ Los scripts viven en:
 
 - `scripts/build_nox_exe.ps1`
 - `scripts/build_nox_setup.ps1`
+- `scripts/test_nox_distribution.ps1`
 
 La configuracion de Inno Setup vive en:
 
@@ -31,6 +32,8 @@ La configuracion de Inno Setup vive en:
 - Podemos seguir desarrollando con uv y, cada tanto, construir un instalador Windows para probar UX real.
 - El bundle usa modo `onedir` para preservar un directorio de instalacion estable.
 - `.nox/system.prompt.md` puede registrar `engine.install_root_path` y `engine.executable_path`.
+- El instalador debe incluir dependencias runtime necesarias para todas las capacidades publicas de `nox`.
+- El build del ejecutable debe correr smoke tests contra el binario empaquetado, incluyendo `nox api serve --help` y una llamada real a `/health`.
 - Inno Setup es una dependencia externa solo para construir el instalador, no para correr Nox.
 - Todavia no hay firma de codigo, auto-update ni instalacion multiusuario robusta.
 

@@ -5,6 +5,19 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $BuildExeScript = Join-Path $RepoRoot "scripts\build_nox_exe.ps1"
+$PyprojectPath = Join-Path $RepoRoot "pyproject.toml"
+
+$ProjectVersion = $null
+foreach ($Line in Get-Content -LiteralPath $PyprojectPath) {
+    if ($Line -match '^version\s*=\s*"([^"]+)"') {
+        $ProjectVersion = $Matches[1]
+        break
+    }
+}
+
+if (-not $ProjectVersion) {
+    throw "Could not read project version from $PyprojectPath"
+}
 
 if ($Clean) {
     & $BuildExeScript -Clean
@@ -41,7 +54,7 @@ if (-not $Iscc) {
 
 Push-Location $RepoRoot
 try {
-    & $Iscc "packaging\windows\NoxSetup.iss"
+    & $Iscc "/DMyAppVersion=$ProjectVersion" "packaging\windows\NoxSetup.iss"
     $SetupPath = Join-Path $RepoRoot "dist\installer\NoxSetup.exe"
     if (-not (Test-Path -LiteralPath $SetupPath)) {
         throw "Expected installer was not created: $SetupPath"

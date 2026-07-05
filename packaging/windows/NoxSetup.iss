@@ -1,5 +1,7 @@
 #define MyAppName "Nox"
-#define MyAppVersion "0.1.2"
+#ifndef MyAppVersion
+#define MyAppVersion "0.5.0"
+#endif
 #define MyAppPublisher "Nox Agent OS"
 #define MyAppExeName "nox.exe"
 
@@ -8,6 +10,7 @@ AppId={{8B8F24E5-F0F5-4930-B22A-81D84D3E31E3}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+VersionInfoVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Nox
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes

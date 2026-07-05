@@ -41,12 +41,19 @@ try {
         --clean `
         --noconfirm `
         --paths src `
+        --hidden-import nox_agent_os.api `
+        --hidden-import nox_agent_os.api.app `
+        --collect-submodules fastapi `
+        --collect-submodules starlette `
+        --collect-submodules uvicorn `
         packaging/windows/nox_pyinstaller_entry.py
 
     $ExePath = Join-Path $RepoRoot "dist\nox\nox.exe"
     if (-not (Test-Path -LiteralPath $ExePath)) {
         throw "Expected executable was not created: $ExePath"
     }
+
+    & (Join-Path $RepoRoot "scripts\test_nox_distribution.ps1") -ExePath $ExePath
 
     Write-Host "Built: $ExePath"
 }

@@ -80,6 +80,7 @@ Despues de instalar `NoxSetup.exe`, una terminal nueva deberia poder ejecutar:
 ```powershell
 nox doctor
 nox init
+nox api serve --help
 ```
 
 Cuando un workspace se inicializa, el prompt local debe incluir:
@@ -99,6 +100,7 @@ engine:
 - No hay mecanismo de auto-update.
 - No hay rollback avanzado mas alla del uninstall del instalador.
 - No hay separacion final entre runtime, policies, schemas y adapters; por ahora viajan dentro del bundle.
+- Cada vez que cambian dependencias runtime hay que reconstruir `NoxSetup.exe`.
 
 ## Criterio de exito del experimento
 
@@ -107,3 +109,5 @@ engine:
 - `nox doctor` muestra el path de instalacion.
 - `nox init` crea `.nox/system.prompt.md`.
 - `nox update` refresca metadata del workspace.
+- `nox api serve --help` funciona sin instalar dependencias externas.
+- El binario empaquetado puede levantar `/health` desde la API local.
