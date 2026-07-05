@@ -38,6 +38,19 @@ Cubren:
 - audit trail consultable por tarea, trace y tipo de evento,
 - resource monitor con salud, conteos de tareas y approvals pendientes.
 
+## v0.4
+
+Los tests de CLI real viven en `tests/test_cli_v04.py` y `tests/test_jsonl_event_store.py`.
+
+Cubren:
+
+- persistencia de eventos en `JsonlEventStore`,
+- creacion y replay de tareas entre comandos,
+- `nox status`,
+- policy check con approval rehidratable,
+- kill switch persistente entre invocaciones,
+- shell interactivo basico.
+
 ## Comandos futuros posibles
 
 ```text

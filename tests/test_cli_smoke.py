@@ -28,6 +28,7 @@ def test_init_creates_workspace_prompt(tmp_path) -> None:
     assert "Local Agent OS" in result.output
     assert "___" in result.output
     assert (tmp_path / ".nox" / "system.prompt.md").exists()
+    assert (tmp_path / ".nox" / "events.jsonl").exists()
 
     prompt = (tmp_path / ".nox" / "system.prompt.md").read_text(encoding="utf-8")
     assert "install_root_path:" in prompt

@@ -21,7 +21,7 @@ from nox_agent_os.governance import (
 )
 from nox_agent_os.kernel.contracts import EventType, TaskState, TaskStatus
 from nox_agent_os.kernel.audit import AuditTrail
-from nox_agent_os.kernel.events import EventBus, InMemoryEventStore
+from nox_agent_os.kernel.events import EventBus, EventStore, InMemoryEventStore
 from nox_agent_os.kernel.monitor import KernelResourceSnapshot, ResourceMonitor
 from nox_agent_os.kernel.state import StateMachineKernel
 
@@ -40,7 +40,7 @@ class AgentKernel:
     def __init__(
         self,
         *,
-        event_store: InMemoryEventStore | None = None,
+        event_store: EventStore | None = None,
         state_machine: StateMachineKernel | None = None,
         policy_engine: PolicyEngine | None = None,
         approval_queue: InMemoryApprovalQueue | None = None,
@@ -209,10 +209,12 @@ class AgentKernel:
                 actor=actor,
                 payload={
                     "approval_id": approval.approval_id,
+                    "action_id": approval.action_id,
                     "capability": approval.capability.value,
                     "status": approval.status.value,
                     "reason": approval.reason,
                     "target": approval.target,
+                    "metadata": approval.metadata,
                 },
                 source_module="governance",
                 risk_level=approval.risk_level.value,

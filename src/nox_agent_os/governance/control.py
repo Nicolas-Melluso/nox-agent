@@ -38,6 +38,22 @@ class KillSwitch:
         self._changed_at = datetime.now(UTC)
         return self.snapshot()
 
+    def restore(
+        self,
+        *,
+        active: bool,
+        reason: str | None,
+        actor: str | None,
+        scope: ControlScope,
+        changed_at: datetime | None,
+    ) -> KillSwitchSnapshot:
+        self._active = active
+        self._reason = reason
+        self._actor = actor
+        self._scope = ControlScope(scope)
+        self._changed_at = changed_at
+        return self.snapshot()
+
     def blocks(self, scope: ControlScope) -> bool:
         requested_scope = ControlScope(scope)
         return self._active and (

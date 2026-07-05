@@ -90,6 +90,27 @@ Pendiente para fases posteriores:
 - Enrutar cada comando por el kernel.
 - Evitar logica de negocio dentro de la CLI.
 - Exponer tareas, eventos, approvals, kill switch y verificaciones.
+- Agregar `JsonlEventStore` minimo en `.nox/events.jsonl` para que la CLI sea usable entre invocaciones.
+- Agregar `nox shell` como REPL operativo con kernel vivo.
+
+Estado actual:
+
+- `JsonlEventStore` minimo creado como adapter de `EventStore`.
+- `nox init` crea `.nox/events.jsonl`.
+- `nox status` muestra snapshot operativo del kernel.
+- `nox task create/list/show/transition` opera sobre eventos persistidos.
+- `nox events list/task` inspecciona el audit trail.
+- `nox policy check` registra decisiones y approvals.
+- `nox approvals list/approve/reject` rehidrata approvals pendientes desde eventos.
+- `nox kill status/on/off` persiste estado del kill switch via eventos.
+- `nox shell` permite operar tareas, policy, approvals, events y kill switch en una sesion viva.
+- Tests v0.4 cubren persistencia JSONL, comandos CLI y shell basico.
+
+Pendiente para fases posteriores:
+
+- Persistencia modular formal con stores versionados en v0.6.
+- CLI mas ergonomica para filtros, formatos JSON y workflows largos.
+- Tool Runtime real para ejecutar acciones aprobadas.
 
 ## v0.5 - API Local
 
@@ -102,6 +123,7 @@ Pendiente para fases posteriores:
 - Formalizar `EventStore`, `TaskStore`, `ConfigStore` y `EvidenceStore`.
 - Implementar adaptadores `InMemory`, `JSONL` y `SQLite`.
 - Agregar `schema_version`, migraciones iniciales y export/backup basico.
+- Tomar `.nox/events.jsonl` de v0.4 como adapter inicial, no como persistencia final.
 
 ## v0.7 - Model Router Sin Modelo Real
 

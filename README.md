@@ -6,9 +6,9 @@ Este proyecto no empieza como un chatbot. Empieza como un sistema operativo agen
 
 ## Estado
 
-Version actual de trabajo: `v0.3.1 - Gobierno, observabilidad minima y cierre de kernel inicial`.
+Version actual de trabajo: `v0.4 - CLI real con event log JSONL minimo`.
 
-Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced y una primera capa ejecutable de gobierno en memoria. Todavia no hay Tool Runtime, modelo local, API HTTP ni persistencia durable conectada.
+Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced, gobierno inicial, observabilidad minima y un event log JSONL por workspace. Todavia no hay Tool Runtime, modelo local, API HTTP ni persistencia SQLite conectada.
 
 ## Artefactos base
 
@@ -47,6 +47,16 @@ nox doctor
 nox version
 nox prompt
 nox update
+nox status
+nox task create "objetivo"
+nox task list
+nox task show <task_id>
+nox task transition <task_id> running --reason "start"
+nox events list
+nox policy check <task_id> write --target docs/example.md
+nox approvals list
+nox kill on --reason "freeze"
+nox shell
 ```
 
 ## Capacidades actuales del kernel
@@ -60,6 +70,8 @@ nox update
 - Detectar repeticion de accion/input con `DoomLoopGuard`.
 - Consultar audit trail inicial desde eventos en memoria.
 - Consultar snapshot operativo con `ResourceMonitor`.
+- Persistir eventos del workspace en `.nox/events.jsonl`.
+- Operar el kernel desde comandos CLI reales.
 
 ## Build experimental Windows
 

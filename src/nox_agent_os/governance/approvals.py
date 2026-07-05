@@ -63,6 +63,12 @@ class InMemoryApprovalQueue:
             if approval.status == ApprovalStatus.PENDING
         ]
 
+    def restore_pending(self, approval: ApprovalRequest) -> ApprovalRequest:
+        if approval.status != ApprovalStatus.PENDING:
+            raise ApprovalQueueError("Only pending approvals can be restored.")
+        self._requests[approval.approval_id] = approval
+        return approval
+
     def approve(self, approval_id: str, *, actor: str, reason: str) -> ApprovalRequest:
         return self._resolve(
             approval_id,

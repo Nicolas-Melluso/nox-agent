@@ -11,6 +11,7 @@ from nox_agent_os import __version__
 
 WORKSPACE_DIR_NAME = ".nox"
 SYSTEM_PROMPT_NAME = "system.prompt.md"
+EVENT_LOG_NAME = "events.jsonl"
 
 
 @dataclass(frozen=True)
@@ -24,6 +25,10 @@ class WorkspaceInitResult:
 class Workspace:
     workspace_dir: Path
     system_prompt_path: Path
+
+    @property
+    def event_log_path(self) -> Path:
+        return self.workspace_dir / EVENT_LOG_NAME
 
 
 class WorkspaceError(RuntimeError):
@@ -120,6 +125,7 @@ Engine resolution:
 - Use `engine.executable_path` as the command entrypoint that created or updated this workspace.
 - Treat the installed package as the source of runtime code, policies, adapters, schemas and defaults.
 - Treat this `.nox` directory as workspace metadata, not as the engine itself.
+- Treat `.nox/{EVENT_LOG_NAME}` as the workspace event log until a stronger storage adapter is configured.
 
 Workspace rules:
 
@@ -138,6 +144,12 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
     _ensure_directory(root, "workspace directory")
     _check_writable_directory(root)
     _ensure_directory(workspace_dir, "Nox workspace directory")
+    event_log_path = workspace_dir / EVENT_LOG_NAME
+    if not event_log_path.exists():
+        try:
+            event_log_path.touch()
+        except OSError as exc:
+            raise WorkspaceError(f"Could not create event log: {event_log_path}. {exc}") from exc
 
     if system_prompt_path.exists() and not force:
         return WorkspaceInitResult(

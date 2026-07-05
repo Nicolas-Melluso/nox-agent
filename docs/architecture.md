@@ -50,6 +50,10 @@ Desde v0.3, las capacidades sensibles se piden al kernel mediante `request_capab
 
 Desde v0.3.1, el kernel expone `AuditTrail` y `ResourceMonitor` como read models en memoria. No reemplazan la persistencia futura; preparan la CLI/API para consultar eventos, decisiones, bloqueos, approvals pendientes y salud operativa sin saltar el kernel.
 
+## CLI real
+
+Desde v0.4, la CLI carga un `AgentKernel` por comando usando `.nox/events.jsonl` como event log minimo. Este JSONL es un adapter temprano de `EventStore`, no la persistencia definitiva. La regla sigue siendo la misma: Typer traduce comandos de usuario; el kernel decide, emite eventos y reconstruye estado.
+
 ## Fuente visual
 
 El diagrama de referencia vive en:
