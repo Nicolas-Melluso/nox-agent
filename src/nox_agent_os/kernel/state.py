@@ -42,12 +42,8 @@ class StateMachineKernel:
         if event.event_type == EventType.TASK_STATUS_CHANGED:
             if state is None:
                 raise StateReplayError("Status changed before task was created.")
-            return TaskState(
-                task_id=state.task_id,
-                user_goal=state.user_goal,
-                workspace_id=state.workspace_id,
-                session_id=state.session_id,
-                trace_id=state.trace_id,
+            return replace(
+                state,
                 status=TaskStatus(event.payload["to"]),
                 current_state={
                     **state.current_state,

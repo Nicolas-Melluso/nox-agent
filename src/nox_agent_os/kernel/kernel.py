@@ -20,7 +20,9 @@ from nox_agent_os.governance import (
     RiskLevel,
 )
 from nox_agent_os.kernel.contracts import EventType, TaskState, TaskStatus
+from nox_agent_os.kernel.audit import AuditTrail
 from nox_agent_os.kernel.events import EventBus, InMemoryEventStore
+from nox_agent_os.kernel.monitor import KernelResourceSnapshot, ResourceMonitor
 from nox_agent_os.kernel.state import StateMachineKernel
 
 KERNEL_TASK_ID = "kernel"
@@ -52,6 +54,13 @@ class AgentKernel:
         self.approval_queue = approval_queue or InMemoryApprovalQueue()
         self.kill_switch = kill_switch or KillSwitch()
         self.doom_loop_guard = doom_loop_guard or DoomLoopGuard()
+        self.audit_trail = AuditTrail(self.event_store)
+        self.resource_monitor = ResourceMonitor(
+            event_store=self.event_store,
+            state_machine=self.state_machine,
+            approval_queue=self.approval_queue,
+            kill_switch=self.kill_switch,
+        )
 
     def create_task(
         self,
@@ -276,6 +285,9 @@ class AgentKernel:
         snapshot = self.kill_switch.deactivate(actor=actor, reason=reason)
         self._emit_kill_switch_changed(snapshot, actor=actor)
         return snapshot
+
+    def resource_snapshot(self) -> KernelResourceSnapshot:
+        return self.resource_monitor.snapshot()
 
     def get_task(self, task_id: str) -> TaskState:
         events = self.event_store.list_for_task(task_id)

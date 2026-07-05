@@ -21,10 +21,11 @@ README, roadmap, stack y plan maestro pueden resumir decisiones, pero no reempla
 | `0011` | Instalador Windows experimental `NoxSetup.exe` | Aceptado |
 | `0012` | Event sourcing inicial del kernel | Aceptado |
 | `0013` | Gobierno inicial, approvals y kill switch | Aceptado |
+| `0014` | Observabilidad minima desde el kernel | Aceptado |
 
 ## Proxima numeracion
 
-El proximo ADR nuevo debe usar `0014`.
+El proximo ADR nuevo debe usar `0015`.
 
 ## Regla de numeracion
 
@@ -32,7 +33,6 @@ Los ADRs no se renombran una vez aceptados. Si una decision cambia, se crea un A
 
 ## ADRs previstos
 
-- `0014`: observabilidad desde el kernel.
 - `0015`: Evidence Ledger.
-- `0016`: State Machine Kernel.
+- `0016`: State Machine Kernel ampliado, si requiere decision formal adicional.
 - `0017`: tests/evals por etapas, si requiere decision formal adicional.

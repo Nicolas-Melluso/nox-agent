@@ -28,6 +28,12 @@ class PermissionDecision(StrEnum):
     ALLOW = "allow"
     ASK = "ask"
     DENY = "deny"
+    APPROVED_ONCE = "approved_once"
+    APPROVED_SESSION = "approved_session"
+    REJECTED = "rejected"
+    AUTO_REVIEWING = "auto_reviewing"
+    AUTO_APPROVED = "auto_approved"
+    AUTO_DENIED = "auto_denied"
 
 
 class ApprovalStatus(StrEnum):

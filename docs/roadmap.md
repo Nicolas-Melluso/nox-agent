@@ -42,14 +42,16 @@ Este roadmap convierte la vision del plan maestro en versiones acumulativas. Cad
 - Crear `StateMachineKernel`.
 - Crear `EventBus`.
 - Emitir `trace_id` desde la primera operacion.
-- Crear stores iniciales en memoria y JSONL/SQLite.
+- Crear store inicial en memoria.
 - Crear y reconstruir tareas desde eventos.
+- Dejar JSONL/SQLite para `v0.6 - Persistencia Modular`.
 
 Estado actual:
 
 - `TaskState` y `EventRecord` iniciales creados.
 - `InMemoryEventStore`, `EventBus`, `StateMachineKernel` y `AgentKernel` iniciales creados.
 - Replay de tarea y bloqueo de transicion invalida cubiertos por tests.
+- JSONL/SQLite quedan explicitamente fuera de v0.2 y pasan a v0.6.
 
 ## v0.3 - Gobierno y Seguridad Inicial
 
@@ -70,13 +72,17 @@ Estado actual:
 - `AgentKernel.request_capability(...)` enruta capacidades por gobierno antes de cualquier side effect futuro.
 - Decisiones de policy, approvals, kill switch y doom loop emiten eventos auditables.
 - Tests `safety` iniciales cubren read allow, write ask, delete deny, kill switch y doom loop.
+- Contratos ampliados de state machine creados: `AgentStatus`, `RunMode`, `RecoveryState` y `TerminationReason`.
+- `TaskStatus` ampliado con estados de planificacion, approvals, tools, subagentes, recovery y timeout.
+- `AuditTrail` inicial creado como read model sobre eventos en memoria.
+- `ResourceMonitor` inicial creado para snapshot operativo del kernel.
 
 Pendiente para fases posteriores:
 
 - Persistir audit trail en JSONL/SQLite.
 - Conectar estas decisiones a Tool Runtime real.
 - Exponer approvals y kill switch desde CLI/API.
-- Agregar `ResourceMonitor`.
+- Implementar comportamiento completo para todos los ejes de la state machine.
 
 ## v0.4 - CLI Real
 

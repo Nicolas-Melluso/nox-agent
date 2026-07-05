@@ -1159,9 +1159,9 @@ Entregable J - Plataforma extensible
 3. Mantener `docs/adr/README.md` como indice canonico de decisiones.
 4. Mantener `docs/adr/0012-event-sourcing.md` como decision de event sourcing inicial.
 5. Mantener `docs/adr/0013-governance-initial-controls.md` como decision de gobierno inicial.
-6. Agregar ADR futuro `0014-observability-from-kernel.md`.
+6. Mantener `docs/adr/0014-observability-from-kernel.md` como decision de observabilidad minima.
 7. Agregar ADR futuro `0015-evidence-ledger.md`.
-8. Agregar ADR futuro `0016-state-machine-kernel.md` con ejes de estado, guards, replay y `doom_loop_detected`.
+8. Agregar ADR futuro `0016-state-machine-kernel.md` si los ejes de estado requieren decision formal adicional.
 9. Mantener `docs/model-backends.md` y `docs/adr/0009-model-backend-and-providers.md` como decision de modelos reemplazables.
 10. Agregar `docs/configuration.md` con config/env vars, precedencia, perfiles, paths, secrets y limites.
 11. Agregar `docs/testing-and-evals.md` con niveles `none`, `smoke`, `unit`, `contract`, `safety`, `integration`, `eval` y `full`.
@@ -1178,7 +1178,7 @@ Entregable J - Plataforma extensible
 22. Mantener `PolicyEngine` minimo con read/write/execute/network/delete/send/credentials.
 23. Mantener `ApprovalQueue` en memoria.
 24. Mantener `KillSwitch`.
-25. Implementar `ResourceMonitor` basico para procesos/tareas.
+25. Mantener `ResourceMonitor` basico para procesos/tareas.
 26. Crear eval: una tarea se reconstruye por replay tras reinicio.
 27. Crear eval: una accion de escritura debe pedir aprobacion.
 28. Crear eval: transicion invalida emite `state_transition_denied`.

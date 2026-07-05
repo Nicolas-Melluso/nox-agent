@@ -33,7 +33,10 @@ Cubren:
 - write pendiente de approval,
 - delete denegado por defecto,
 - kill switch bloqueando tareas o acciones,
-- doom loop repetible bloqueando una tarea.
+- doom loop repetible bloqueando una tarea,
+- contratos ampliados de state machine,
+- audit trail consultable por tarea, trace y tipo de evento,
+- resource monitor con salud, conteos de tareas y approvals pendientes.
 
 ## Comandos futuros posibles
 

@@ -6,7 +6,7 @@ Este proyecto no empieza como un chatbot. Empieza como un sistema operativo agen
 
 ## Estado
 
-Version actual de trabajo: `v0.3 - Gobierno y Seguridad Inicial`.
+Version actual de trabajo: `v0.3.1 - Gobierno, observabilidad minima y cierre de kernel inicial`.
 
 Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced y una primera capa ejecutable de gobierno en memoria. Todavia no hay Tool Runtime, modelo local, API HTTP ni persistencia durable conectada.
 
@@ -58,6 +58,8 @@ nox update
 - Crear y resolver approvals en memoria.
 - Activar kill switch para tareas nuevas o acciones gobernadas.
 - Detectar repeticion de accion/input con `DoomLoopGuard`.
+- Consultar audit trail inicial desde eventos en memoria.
+- Consultar snapshot operativo con `ResourceMonitor`.
 
 ## Build experimental Windows
 
