@@ -54,6 +54,10 @@ Desde v0.3.1, el kernel expone `AuditTrail` y `ResourceMonitor` como read models
 
 Desde v0.4, la CLI carga un `AgentKernel` por comando usando `.nox/events.jsonl` como event log minimo. Este JSONL es un adapter temprano de `EventStore`, no la persistencia definitiva. La regla sigue siendo la misma: Typer traduce comandos de usuario; el kernel decide, emite eventos y reconstruye estado.
 
+## API local
+
+Desde v0.5, FastAPI expone una superficie HTTP local sobre el mismo runtime que usa la CLI. La API no habla directo con storage ni policy: carga el workspace, obtiene un `AgentKernel`, llama contratos internos y devuelve respuestas HTTP.
+
 ## Fuente visual
 
 El diagrama de referencia vive en:

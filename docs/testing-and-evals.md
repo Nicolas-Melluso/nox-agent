@@ -51,6 +51,18 @@ Cubren:
 - kill switch persistente entre invocaciones,
 - shell interactivo basico.
 
+## v0.5
+
+Los tests de API local viven en `tests/test_api_v05.py`.
+
+Cubren:
+
+- health y status,
+- ciclo de tareas por HTTP,
+- eventos por tarea,
+- policy check con approval rehidratable,
+- kill switch bloqueando nuevas tareas.
+
 ## Comandos futuros posibles
 
 ```text
@@ -84,6 +96,7 @@ Los gates bloqueantes se activan por fase:
 - v0.1: `smoke`
 - v0.2: `smoke`, `unit`, `contract`
 - v0.3: `safety`
+- v0.5: `integration` inicial para API local sobre workspace temporal
 - v0.6: `integration`
 - v0.8: primeras evals de modelo
 - v1.0: `full` para release interno

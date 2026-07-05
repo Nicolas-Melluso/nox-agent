@@ -46,12 +46,14 @@ events_app = typer.Typer(help="Inspect the workspace event log.")
 policy_app = typer.Typer(help="Evaluate governed capabilities.")
 approvals_app = typer.Typer(help="Inspect and resolve human approvals.")
 kill_app = typer.Typer(help="Control the kernel kill switch.")
+api_app = typer.Typer(help="Serve the local HTTP API.")
 
 app.add_typer(task_app, name="task")
 app.add_typer(events_app, name="events")
 app.add_typer(policy_app, name="policy")
 app.add_typer(approvals_app, name="approvals")
 app.add_typer(kill_app, name="kill")
+app.add_typer(api_app, name="api")
 
 
 @app.callback(invoke_without_command=True)
@@ -462,6 +464,44 @@ def kill_off(
     )
     typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
     typer.echo(f"Scope: {snapshot.scope.value}")
+
+
+@api_app.command("serve")
+def api_serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Bind host."),
+    port: int = typer.Option(8787, "--port", help="Bind port."),
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to serve."),
+) -> None:
+    """Serve the local HTTP API for a Nox workspace."""
+    print_banner()
+    workspace_path = Path.cwd() if path is None else path
+
+    try:
+        load_kernel_context(workspace_path)
+    except (WorkspaceError, EventStoreError) as exc:
+        typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    try:
+        import uvicorn
+    except ImportError as exc:
+        typer.secho(
+            "[error] Uvicorn is not installed. Reinstall Nox with API dependencies.",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1) from exc
+
+    from nox_agent_os.api import create_app
+
+    typer.echo(f"Serving Nox API at http://{host}:{port}")
+    typer.echo(f"Workspace: {workspace_path.resolve()}")
+    uvicorn.run(
+        create_app(workspace_path=workspace_path),
+        host=host,
+        port=port,
+        log_level="info",
+    )
 
 
 @app.command()

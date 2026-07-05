@@ -1161,40 +1161,42 @@ Entregable J - Plataforma extensible
 5. Mantener `docs/adr/0013-governance-initial-controls.md` como decision de gobierno inicial.
 6. Mantener `docs/adr/0014-observability-from-kernel.md` como decision de observabilidad minima.
 7. Mantener `docs/adr/0015-cli-and-jsonl-event-log.md` como decision de CLI real y JSONL minimo.
-8. Agregar ADR futuro `0016-evidence-ledger.md`.
-9. Agregar ADR futuro `0017-state-machine-kernel.md` si los ejes de estado requieren decision formal adicional.
-10. Mantener `docs/model-backends.md` y `docs/adr/0009-model-backend-and-providers.md` como decision de modelos reemplazables.
-11. Agregar `docs/configuration.md` con config/env vars, precedencia, perfiles, paths, secrets y limites.
-12. Agregar `docs/testing-and-evals.md` con niveles `none`, `smoke`, `unit`, `contract`, `safety`, `integration`, `eval` y `full`.
-13. Agregar `docs/schemas.md` con eventos, tareas, tool calls, evidencia, memoria, state machine y perfiles de razonamiento.
-14. Agregar `docs/data-lifecycle.md` con versionado, borrado, migraciones, retencion, backup/restore y provenance.
-15. Implementar `StateMachineKernel`.
-16. Implementar `TaskState` event-sourced.
-17. Implementar `TransitionGuard`.
-18. Mantener `DoomLoopGuard` minimo.
-19. Implementar `EventBus`.
-20. Implementar `SessionStore`.
-21. Implementar logs estructurados con `trace_id`.
-22. Mantener audit trail minimo por eventos del kernel.
-23. Mantener `PolicyEngine` minimo con read/write/execute/network/delete/send/credentials.
-24. Mantener `ApprovalQueue` en memoria.
-25. Mantener `KillSwitch`.
-26. Mantener `ResourceMonitor` basico para procesos/tareas.
-27. Crear eval: una tarea se reconstruye por replay tras reinicio.
-28. Crear eval: una accion de escritura debe pedir aprobacion.
-29. Crear eval: transicion invalida emite `state_transition_denied`.
-30. Crear eval: doom loop repetible termina en `doom_loop_detected`.
-31. Crear eval: Kill Switch bloquea nueva ejecucion.
-32. Implementar `ModelBackend` interface.
-33. Implementar `LlamaCppBackend`.
-34. Implementar `ModelRegistry`.
-35. Implementar `ReasoningProfile` ejecutable.
-36. Implementar `RoutingPolicy` minima.
-37. Crear eval: el router registra modelo, perfil, presupuesto, riesgo y razon de seleccion.
-38. Implementar CLI de tareas pasando por Governance.
-39. Mantener CLI real pasando por Governance y `.nox/events.jsonl`.
-40. Implementar primer tool/source adapter: filesystem read-only con provenance.
-41. Implementar `EvidenceLedger` minimo.
+8. Mantener `docs/adr/0016-local-api-adapter.md` como decision de API local.
+9. Agregar ADR futuro `0017-evidence-ledger.md`.
+10. Agregar ADR futuro `0018-state-machine-kernel.md` si los ejes de estado requieren decision formal adicional.
+11. Mantener `docs/model-backends.md` y `docs/adr/0009-model-backend-and-providers.md` como decision de modelos reemplazables.
+12. Agregar `docs/configuration.md` con config/env vars, precedencia, perfiles, paths, secrets y limites.
+13. Agregar `docs/testing-and-evals.md` con niveles `none`, `smoke`, `unit`, `contract`, `safety`, `integration`, `eval` y `full`.
+14. Agregar `docs/schemas.md` con eventos, tareas, tool calls, evidencia, memoria, state machine y perfiles de razonamiento.
+15. Agregar `docs/data-lifecycle.md` con versionado, borrado, migraciones, retencion, backup/restore y provenance.
+16. Implementar `StateMachineKernel`.
+17. Implementar `TaskState` event-sourced.
+18. Implementar `TransitionGuard`.
+19. Mantener `DoomLoopGuard` minimo.
+20. Implementar `EventBus`.
+21. Implementar `SessionStore`.
+22. Implementar logs estructurados con `trace_id`.
+23. Mantener audit trail minimo por eventos del kernel.
+24. Mantener `PolicyEngine` minimo con read/write/execute/network/delete/send/credentials.
+25. Mantener `ApprovalQueue` en memoria.
+26. Mantener `KillSwitch`.
+27. Mantener `ResourceMonitor` basico para procesos/tareas.
+28. Crear eval: una tarea se reconstruye por replay tras reinicio.
+29. Crear eval: una accion de escritura debe pedir aprobacion.
+30. Crear eval: transicion invalida emite `state_transition_denied`.
+31. Crear eval: doom loop repetible termina en `doom_loop_detected`.
+32. Crear eval: Kill Switch bloquea nueva ejecucion.
+33. Implementar `ModelBackend` interface.
+34. Implementar `LlamaCppBackend`.
+35. Implementar `ModelRegistry`.
+36. Implementar `ReasoningProfile` ejecutable.
+37. Implementar `RoutingPolicy` minima.
+38. Crear eval: el router registra modelo, perfil, presupuesto, riesgo y razon de seleccion.
+39. Implementar CLI de tareas pasando por Governance.
+40. Mantener CLI real pasando por Governance y `.nox/events.jsonl`.
+41. Mantener API local pasando por Governance y `.nox/events.jsonl`.
+42. Implementar primer tool/source adapter: filesystem read-only con provenance.
+43. Implementar `EvidenceLedger` minimo.
 
 ## 9. Riesgos principales
 

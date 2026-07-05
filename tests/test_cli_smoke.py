@@ -10,6 +10,7 @@ def test_help_smoke() -> None:
 
     assert result.exit_code == 0
     assert "Local agent OS workspace launcher" in result.output
+    assert "api" in result.output
     assert "--install-completion" not in result.output
 
 
@@ -19,6 +20,15 @@ def test_no_args_shows_banner_and_help() -> None:
     assert result.exit_code == 0
     assert "Local Agent OS" in result.output
     assert "Usage:" in result.output
+
+
+def test_api_help_smoke() -> None:
+    result = runner.invoke(app, ["api", "serve", "--help"])
+
+    assert result.exit_code == 0
+    assert "Serve the local HTTP API" in result.output
+    assert "--host" in result.output
+    assert "--port" in result.output
 
 
 def test_init_creates_workspace_prompt(tmp_path) -> None:

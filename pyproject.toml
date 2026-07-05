@@ -4,29 +4,30 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nox-agent-os"
-version = "0.4.0"
+version = "0.5.0"
 description = "Local agent OS with governed workspaces."
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
 dependencies = [
+  "fastapi>=0.116.0",
   "typer>=0.16.0",
+  "uvicorn>=0.35.0",
 ]
 
 [project.optional-dependencies]
-api = [
-  "fastapi>=0.116.0",
-  "uvicorn>=0.35.0",
-]
+api = []
 llama = []
 openai = []
 installer = [
   "pyinstaller>=6.21.0",
 ]
 dev = [
+  "httpx2>=0.28.0",
   "pytest>=8.0.0",
 ]
 all = [
   "fastapi>=0.116.0",
+  "httpx2>=0.28.0",
   "uvicorn>=0.35.0",
   "pytest>=8.0.0",
   "pyinstaller>=6.21.0",

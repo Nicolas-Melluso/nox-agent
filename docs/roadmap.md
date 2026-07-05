@@ -118,6 +118,21 @@ Pendiente para fases posteriores:
 - Crear endpoints minimos para tareas, eventos y control.
 - Mantener la logica core fuera de routers HTTP.
 
+Estado actual:
+
+- `nox_agent_os.api.create_app(...)` creado como factory FastAPI.
+- `nox api serve` creado para servir el workspace actual.
+- API y CLI comparten `load_kernel_context(...)` y `.nox/events.jsonl`.
+- Endpoints creados para health, status, tasks, events, policy, approvals y kill switch.
+- Tests API cubren ciclo de tarea, eventos, approvals y kill switch.
+
+Pendiente para fases posteriores:
+
+- Autenticacion/local trust boundary.
+- Streaming de eventos.
+- Formatos de respuesta mas estables para SDK/UI.
+- Persistencia modular formal en v0.6.
+
 ## v0.6 - Persistencia Modular
 
 - Formalizar `EventStore`, `TaskStore`, `ConfigStore` y `EvidenceStore`.
