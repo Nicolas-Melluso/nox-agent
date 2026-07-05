@@ -61,6 +61,23 @@ Estado actual:
 - Bloquear acciones sensibles por defecto.
 - Registrar decisiones en audit trail.
 
+Estado actual:
+
+- `DefaultPolicyEngine` inicial creado con decisiones `allow`, `ask` y `deny`.
+- `InMemoryApprovalQueue` creada para approvals pendientes y resolucion humana.
+- `KillSwitch` creado para bloquear nuevas tareas o acciones gobernadas.
+- `DoomLoopGuard` basico creado para detectar accion/input repetidos.
+- `AgentKernel.request_capability(...)` enruta capacidades por gobierno antes de cualquier side effect futuro.
+- Decisiones de policy, approvals, kill switch y doom loop emiten eventos auditables.
+- Tests `safety` iniciales cubren read allow, write ask, delete deny, kill switch y doom loop.
+
+Pendiente para fases posteriores:
+
+- Persistir audit trail en JSONL/SQLite.
+- Conectar estas decisiones a Tool Runtime real.
+- Exponer approvals y kill switch desde CLI/API.
+- Agregar `ResourceMonitor`.
+
 ## v0.4 - CLI Real
 
 - Implementar comandos Typer iniciales.

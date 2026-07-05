@@ -6,9 +6,9 @@ Este proyecto no empieza como un chatbot. Empieza como un sistema operativo agen
 
 ## Estado
 
-Version actual de trabajo: `v0.1 - Proyecto Instalable Vacio`.
+Version actual de trabajo: `v0.3 - Gobierno y Seguridad Inicial`.
 
-En esta etapa solo se documentan decisiones fundacionales. No hay codigo de producto todavia.
+Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced y una primera capa ejecutable de gobierno en memoria. Todavia no hay Tool Runtime, modelo local, API HTTP ni persistencia durable conectada.
 
 ## Artefactos base
 
@@ -48,6 +48,16 @@ nox version
 nox prompt
 nox update
 ```
+
+## Capacidades actuales del kernel
+
+- Crear tareas con `trace_id` y eventos versionados.
+- Reconstruir estado por replay.
+- Rechazar transiciones invalidas.
+- Evaluar capacidades con `PolicyEngine`.
+- Crear y resolver approvals en memoria.
+- Activar kill switch para tareas nuevas o acciones gobernadas.
+- Detectar repeticion de accion/input con `DoomLoopGuard`.
 
 ## Build experimental Windows
 

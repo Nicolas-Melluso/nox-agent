@@ -23,6 +23,18 @@ nox doctor
 
 En v0.1, `nox doctor` cumple el rol de chequeo smoke intuitivo: valida instalacion, paquete importable, comando disponible y workspace `.nox`.
 
+## v0.3
+
+Los tests `safety` iniciales viven en `tests/test_governance_minimum.py`.
+
+Cubren:
+
+- read permitido por policy,
+- write pendiente de approval,
+- delete denegado por defecto,
+- kill switch bloqueando tareas o acciones,
+- doom loop repetible bloqueando una tarea.
+
 ## Comandos futuros posibles
 
 ```text

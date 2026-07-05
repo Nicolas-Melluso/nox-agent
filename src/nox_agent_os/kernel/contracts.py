@@ -13,6 +13,12 @@ class EventType(StrEnum):
     TASK_CREATED = "task_created"
     TASK_STATUS_CHANGED = "task_status_changed"
     STATE_TRANSITION_DENIED = "state_transition_denied"
+    POLICY_DECISION_RECORDED = "policy_decision_recorded"
+    APPROVAL_REQUESTED = "approval_requested"
+    APPROVAL_RESOLVED = "approval_resolved"
+    KILL_SWITCH_CHANGED = "kill_switch_changed"
+    KILL_SWITCH_BLOCKED = "kill_switch_blocked"
+    DOOM_LOOP_DETECTED = "doom_loop_detected"
 
 
 class TaskStatus(StrEnum):

@@ -67,3 +67,13 @@ Cada decision HITL debe registrar:
 ## Regla de seguridad
 
 Si una accion no puede clasificarse con confianza, se trata como `ask` o `deny`, nunca como `allow`.
+
+## Estado v0.3
+
+La primera implementacion ejecutable vive en `nox_agent_os.governance`.
+
+- `read` se permite por defecto.
+- `write`, `execute`, `network` y `send` piden aprobacion.
+- `delete` y `credentials` se niegan por defecto.
+- Los approvals son en memoria.
+- Cada decision queda registrada como evento del kernel.

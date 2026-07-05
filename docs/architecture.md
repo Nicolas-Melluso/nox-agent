@@ -10,6 +10,9 @@ Product Surfaces
     -> Agent Kernel
       -> State Machine
       -> Policy Engine
+      -> Approval Queue
+      -> Kill Switch
+      -> DoomLoopGuard
       -> Event Bus
       -> Model Router
       -> Tool Runtime
@@ -36,6 +39,10 @@ HTTP request / CLI command / UI action
 El kernel no debe depender de FastAPI, Typer, SQLite, llama.cpp ni ningun backend concreto.
 
 Los detalles concretos viven en adaptadores reemplazables.
+
+## Gobierno inicial
+
+Desde v0.3, las capacidades sensibles se piden al kernel mediante `request_capability(...)`. El kernel evalua la accion con `PolicyEngine`, registra la decision como evento, crea approvals si corresponde, respeta el kill switch y bloquea loops repetitivos antes de que exista un Tool Runtime real.
 
 ## Fuente visual
 
