@@ -1157,7 +1157,7 @@ Entregable J - Plataforma extensible
 1. Crear repo y estructura `docs/`, `src/`, `tests/`, `evals/`, `configs/`, `data/`.
 2. Agregar `docs/architecture.md` basado en este documento.
 3. Mantener `docs/adr/README.md` como indice canonico de decisiones.
-4. Agregar ADR futuro `0012-event-sourcing.md`.
+4. Mantener `docs/adr/0012-event-sourcing.md` como decision de event sourcing inicial.
 5. Agregar ADR futuro `0013-observability-from-kernel.md`.
 6. Agregar ADR futuro `0014-evidence-ledger.md`.
 7. Agregar ADR futuro `0015-state-machine-kernel.md` con ejes de estado, guards, replay y `doom_loop_detected`.

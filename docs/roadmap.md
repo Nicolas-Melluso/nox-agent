@@ -45,6 +45,12 @@ Este roadmap convierte la vision del plan maestro en versiones acumulativas. Cad
 - Crear stores iniciales en memoria y JSONL/SQLite.
 - Crear y reconstruir tareas desde eventos.
 
+Estado actual:
+
+- `TaskState` y `EventRecord` iniciales creados.
+- `InMemoryEventStore`, `EventBus`, `StateMachineKernel` y `AgentKernel` iniciales creados.
+- Replay de tarea y bloqueo de transicion invalida cubiertos por tests.
+
 ## v0.3 - Gobierno y Seguridad Inicial
 
 - Crear `PolicyEngine` minimo.

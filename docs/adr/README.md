@@ -19,10 +19,11 @@ README, roadmap, stack y plan maestro pueden resumir decisiones, pero no reempla
 | `0009` | ModelBackend y providers reemplazables | Aceptado |
 | `0010` | Nox como comando y workspace `.nox` | Aceptado |
 | `0011` | Instalador Windows experimental `NoxSetup.exe` | Aceptado |
+| `0012` | Event sourcing inicial del kernel | Aceptado |
 
 ## Proxima numeracion
 
-El proximo ADR nuevo debe usar `0012`.
+El proximo ADR nuevo debe usar `0013`.
 
 ## Regla de numeracion
 
@@ -30,7 +31,6 @@ Los ADRs no se renombran una vez aceptados. Si una decision cambia, se crea un A
 
 ## ADRs previstos
 
-- `0012`: event sourcing.
 - `0013`: observabilidad desde el kernel.
 - `0014`: Evidence Ledger.
 - `0015`: State Machine Kernel.
