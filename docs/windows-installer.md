@@ -95,7 +95,8 @@ engine:
 ## Limitaciones conocidas
 
 - El instalador todavia es experimental.
-- El agregado al PATH se hace a nivel usuario.
+- El agregado al PATH se hace a nivel usuario y mueve el directorio de Nox al inicio
+  para priorizar `NoxSetup.exe` frente a shims viejos de `uv tool`.
 - No hay firma de codigo.
 - No hay mecanismo de auto-update.
 - No hay rollback avanzado mas alla del uninstall del instalador.

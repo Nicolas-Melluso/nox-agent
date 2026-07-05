@@ -93,6 +93,19 @@ def _check_writable_directory(path: Path) -> None:
         raise WorkspaceError(f"Workspace directory is not writable: {path}. {exc}") from exc
 
 
+def is_inside_workspace_metadata(path: Path) -> bool:
+    resolved = path.resolve(strict=False)
+    return any(part.lower() == WORKSPACE_DIR_NAME for part in resolved.parts)
+
+
+def _check_not_inside_workspace_metadata(path: Path) -> None:
+    if is_inside_workspace_metadata(path):
+        raise WorkspaceError(
+            f"Refusing to initialize a Nox workspace inside {WORKSPACE_DIR_NAME} metadata: {path}. "
+            "Move to the project root and run: nox init"
+        )
+
+
 def render_system_prompt() -> str:
     engine = get_engine_reference()
     return f"""---
@@ -141,6 +154,7 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
     workspace_dir = root / WORKSPACE_DIR_NAME
     system_prompt_path = workspace_dir / SYSTEM_PROMPT_NAME
 
+    _check_not_inside_workspace_metadata(root)
     _ensure_directory(root, "workspace directory")
     _check_writable_directory(root)
     _ensure_directory(workspace_dir, "Nox workspace directory")
@@ -175,6 +189,7 @@ def update_workspace(path: Path) -> WorkspaceInitResult:
     workspace_dir = root / WORKSPACE_DIR_NAME
     system_prompt_path = workspace_dir / SYSTEM_PROMPT_NAME
 
+    _check_not_inside_workspace_metadata(root)
     _ensure_directory(root, "workspace directory")
     _check_writable_directory(root)
 

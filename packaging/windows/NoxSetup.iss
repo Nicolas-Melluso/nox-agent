@@ -37,22 +37,44 @@ Name: "{group}\Nox"; Filename: "{app}\{#MyAppExeName}"
 Filename: "{app}\{#MyAppExeName}"; Parameters: "doctor"; Description: "Run nox doctor"; Flags: nowait postinstall skipifsilent
 
 [Registry]
-Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath(ExpandConstant('{app}')) and WizardIsTaskSelected('addtopath')
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{code:GetUserPathWithAppFirst}"; Check: WizardIsTaskSelected('addtopath')
 
 [Code]
-function NeedsAddPath(PathToAdd: string): Boolean;
+function GetUserPathWithAppFirst(Param: string): string;
 var
   CurrentPath: string;
-  NormalizedCurrent: string;
-  NormalizedAdd: string;
+  AppPath: string;
+  Segment: string;
+  Remainder: string;
+  SeparatorIndex: Integer;
 begin
+  AppPath := ExpandConstant('{app}');
   if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', CurrentPath) then
   begin
-    Result := True;
+    Result := AppPath;
     exit;
   end;
 
-  NormalizedCurrent := ';' + Uppercase(CurrentPath) + ';';
-  NormalizedAdd := ';' + Uppercase(PathToAdd) + ';';
-  Result := Pos(NormalizedAdd, NormalizedCurrent) = 0;
+  Result := AppPath;
+  Remainder := CurrentPath;
+
+  while Remainder <> '' do
+  begin
+    SeparatorIndex := Pos(';', Remainder);
+    if SeparatorIndex > 0 then
+    begin
+      Segment := Trim(Copy(Remainder, 1, SeparatorIndex - 1));
+      Delete(Remainder, 1, SeparatorIndex);
+    end
+      else
+    begin
+      Segment := Trim(Remainder);
+      Remainder := '';
+    end;
+
+    if (Segment <> '') and (Uppercase(Segment) <> Uppercase(AppPath)) then
+    begin
+      Result := Result + ';' + Segment;
+    end;
+  end;
 end;

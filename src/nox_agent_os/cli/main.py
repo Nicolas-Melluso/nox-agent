@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import platform
 import shlex
+import sys
 from pathlib import Path
 
 import typer
@@ -30,6 +31,7 @@ from nox_agent_os.workspace import (
     create_workspace,
     find_workspace,
     get_engine_reference,
+    is_inside_workspace_metadata,
     render_system_prompt,
     update_workspace,
 )
@@ -72,6 +74,16 @@ def print_banner() -> None:
     typer.secho("| |\\  | |_| | /  \\ ", fg=typer.colors.RED, bold=True)
     typer.secho("|_| \\_|\\___/ /_/\\_\\", fg=typer.colors.RED, bold=True)
     typer.secho("Local Agent OS", fg=typer.colors.RED)
+
+
+def print_runtime_diagnostic() -> None:
+    engine = get_engine_reference()
+    typer.echo(f"[hint] nox version: {__version__}", err=True)
+    typer.echo(f"[hint] runtime mode: {engine.mode}", err=True)
+    typer.echo(f"[hint] executable: {engine.executable_path}", err=True)
+    typer.echo(f"[hint] package path: {engine.package_path}", err=True)
+    typer.echo(f"[hint] sys.executable: {Path(sys.executable).resolve()}", err=True)
+    typer.echo("[hint] PowerShell: Get-Command nox -All", err=True)
 
 
 def load_cli_context(path: Path | None = None) -> CliKernelContext:
@@ -194,6 +206,12 @@ def doctor(path: Path | None = typer.Argument(None, help="Workspace directory to
 
     for label, value in checks:
         typer.echo(f"[ok] {label}: {value}")
+
+    if is_inside_workspace_metadata(root):
+        typer.echo(
+            f"[warn] cwd: inside {WORKSPACE_DIR_NAME} metadata; "
+            "run workspace commands from the project root"
+        )
 
     if workspace is None:
         typer.echo(f"[warn] workspace: no {WORKSPACE_DIR_NAME}/{SYSTEM_PROMPT_NAME} found")
@@ -486,10 +504,16 @@ def api_serve(
         import uvicorn
     except ImportError as exc:
         typer.secho(
-            "[error] Uvicorn is not installed. Reinstall Nox with API dependencies.",
+            "[error] Uvicorn is not installed in the active Nox runtime.",
             fg=typer.colors.RED,
             err=True,
         )
+        print_runtime_diagnostic()
+        typer.echo(
+            "[hint] If NoxSetup.exe is installed, another older nox command may be earlier in PATH.",
+            err=True,
+        )
+        typer.echo("[hint] Dev reinstall: uv tool install --editable . --reinstall", err=True)
         raise typer.Exit(code=1) from exc
 
     from nox_agent_os.api import create_app

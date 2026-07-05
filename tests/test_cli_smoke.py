@@ -66,6 +66,25 @@ def test_init_without_path_uses_current_directory(tmp_path, monkeypatch) -> None
     assert (tmp_path / ".nox" / "system.prompt.md").exists()
 
 
+def test_init_refuses_workspace_metadata_directory(tmp_path) -> None:
+    runner.invoke(app, ["init", str(tmp_path)])
+
+    result = runner.invoke(app, ["init", str(tmp_path / ".nox")])
+
+    assert result.exit_code == 1
+    assert "inside .nox metadata" in result.output
+    assert not (tmp_path / ".nox" / ".nox").exists()
+
+
+def test_doctor_warns_when_run_inside_workspace_metadata(tmp_path) -> None:
+    runner.invoke(app, ["init", str(tmp_path)])
+
+    result = runner.invoke(app, ["doctor", str(tmp_path / ".nox")])
+
+    assert result.exit_code == 0
+    assert "inside .nox metadata" in result.output
+
+
 def test_update_refreshes_workspace_prompt(tmp_path) -> None:
     runner.invoke(app, ["init", str(tmp_path)])
     prompt_path = tmp_path / ".nox" / "system.prompt.md"
