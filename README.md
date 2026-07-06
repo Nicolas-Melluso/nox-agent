@@ -63,6 +63,79 @@ La instancia `.nox` tiene identidad propia en `.nox/identity.json`. Registra `wo
 Los ADRs en `docs/adr/` son la fuente canonica para decisiones aceptadas.
 README, roadmap y stack resumen esas decisiones para orientar el trabajo.
 
+## Uso e Instalacion Rapida
+
+Hay dos formas de usar Nox durante el desarrollo.
+
+### 1. Usar la version del repo
+
+Este flujo usa el codigo actual del repositorio, aunque no este instalado globalmente:
+
+```powershell
+cd "C:\Users\asus\Documents\Local Drive Development"
+uv run nox version
+uv run nox --help
+uv run nox init "C:\ruta\a\tu\proyecto"
+uv run nox doctor "C:\ruta\a\tu\proyecto"
+```
+
+Usa este modo para probar cambios recien implementados antes de generar un instalador.
+
+### 2. Instalar Nox en Windows con NoxSetup.exe
+
+Este flujo genera un instalador con la version actual del repo y deja el comando `nox` disponible desde cualquier carpeta:
+
+```powershell
+cd "C:\Users\asus\Documents\Local Drive Development"
+powershell -ExecutionPolicy Bypass -File .\scripts\build_nox_setup.ps1 -Clean
+```
+
+Despues ejecutar:
+
+```text
+dist\installer\NoxSetup.exe
+```
+
+Cuando termina el instalador, abrir una terminal nueva y verificar:
+
+```powershell
+Get-Command nox -All
+nox version
+nox doctor
+```
+
+Si `nox version` no muestra la version esperada, hay otro `nox.exe` antes en el PATH o falta abrir una terminal nueva.
+
+### 3. Crear o actualizar un workspace
+
+En cualquier carpeta/proyecto donde quieras usar Nox:
+
+```powershell
+cd "C:\ruta\a\tu\proyecto"
+nox init
+nox doctor
+```
+
+Esto crea:
+
+```text
+.nox/
+  identity.json
+  model.config.json
+  system.prompt.md
+  events.jsonl
+```
+
+Si ya existia `.nox` y solo queres refrescar la metadata local con el engine instalado actual:
+
+```powershell
+nox update
+```
+
+`nox update` no actualiza Nox instalado. Solo actualiza la metadata del workspace `.nox`.
+
+Para probar cambios nuevos del repo como comando global, hay que reconstruir e instalar de nuevo `NoxSetup.exe`.
+
 ## Comandos principales
 
 ```text
