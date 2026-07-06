@@ -19,6 +19,8 @@ class EventType(StrEnum):
     KILL_SWITCH_CHANGED = "kill_switch_changed"
     KILL_SWITCH_BLOCKED = "kill_switch_blocked"
     DOOM_LOOP_DETECTED = "doom_loop_detected"
+    MODEL_ROUTE_SELECTED = "model_route_selected"
+    MODEL_INVOCATION_COMPLETED = "model_invocation_completed"
 
 
 class TaskStatus(StrEnum):

@@ -12,11 +12,13 @@ from uuid import uuid4
 
 import nox_agent_os
 from nox_agent_os import __version__
+from nox_agent_os.modeling import ModelConfigError, ensure_model_config
 
 WORKSPACE_DIR_NAME = ".nox"
 SYSTEM_PROMPT_NAME = "system.prompt.md"
 EVENT_LOG_NAME = "events.jsonl"
 IDENTITY_NAME = "identity.json"
+MODEL_CONFIG_NAME = "model.config.json"
 IDENTITY_SCHEMA_VERSION = 1
 
 
@@ -37,6 +39,7 @@ class WorkspaceInitResult:
     workspace_dir: Path
     system_prompt_path: Path
     identity_path: Path
+    model_config_path: Path
     identity: WorkspaceIdentity
     created: bool
 
@@ -46,6 +49,7 @@ class Workspace:
     workspace_dir: Path
     system_prompt_path: Path
     identity_path: Path
+    model_config_path: Path
     identity: WorkspaceIdentity
 
     @property
@@ -294,6 +298,7 @@ Engine resolution:
 - Treat the installed package as the source of runtime code, policies, adapters, schemas and defaults.
 - Treat this `.nox` directory as workspace metadata and local workspace state, not as the engine itself.
 - Treat `.nox/{EVENT_LOG_NAME}` as the workspace event log until a stronger storage adapter is configured.
+- Treat `.nox/{MODEL_CONFIG_NAME}` as workspace model routing config: default model, token limits and audit level.
 
 Workspace rules:
 
@@ -319,6 +324,11 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
         refresh=force or not system_prompt_path.exists(),
     )
     identity_path = workspace_dir / IDENTITY_NAME
+    model_config_path = workspace_dir / MODEL_CONFIG_NAME
+    try:
+        ensure_model_config(model_config_path)
+    except ModelConfigError as exc:
+        raise WorkspaceError(str(exc)) from exc
     event_log_path = workspace_dir / EVENT_LOG_NAME
     if not event_log_path.exists():
         try:
@@ -331,6 +341,7 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
             workspace_dir=workspace_dir,
             system_prompt_path=system_prompt_path,
             identity_path=identity_path,
+            model_config_path=model_config_path,
             identity=identity,
             created=False,
         )
@@ -344,6 +355,7 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
         workspace_dir=workspace_dir,
         system_prompt_path=system_prompt_path,
         identity_path=identity_path,
+        model_config_path=model_config_path,
         identity=identity,
         created=True,
     )
@@ -362,6 +374,11 @@ def update_workspace(path: Path) -> WorkspaceInitResult:
         return create_workspace(root, force=True)
 
     identity = ensure_workspace_identity(workspace_dir, root, refresh=True)
+    model_config_path = workspace_dir / MODEL_CONFIG_NAME
+    try:
+        ensure_model_config(model_config_path)
+    except ModelConfigError as exc:
+        raise WorkspaceError(str(exc)) from exc
 
     try:
         system_prompt_path.write_text(render_system_prompt(), encoding="utf-8")
@@ -372,6 +389,7 @@ def update_workspace(path: Path) -> WorkspaceInitResult:
         workspace_dir=workspace_dir,
         system_prompt_path=system_prompt_path,
         identity_path=workspace_dir / IDENTITY_NAME,
+        model_config_path=model_config_path,
         identity=identity,
         created=False,
     )
@@ -385,10 +403,16 @@ def find_workspace(path: Path) -> Workspace | None:
         system_prompt_path = workspace_dir / SYSTEM_PROMPT_NAME
         if system_prompt_path.exists():
             identity = ensure_workspace_identity(workspace_dir, candidate)
+            model_config_path = workspace_dir / MODEL_CONFIG_NAME
+            try:
+                ensure_model_config(model_config_path)
+            except ModelConfigError as exc:
+                raise WorkspaceError(str(exc)) from exc
             return Workspace(
                 workspace_dir=workspace_dir,
                 system_prompt_path=system_prompt_path,
                 identity_path=workspace_dir / IDENTITY_NAME,
+                model_config_path=model_config_path,
                 identity=identity,
             )
 

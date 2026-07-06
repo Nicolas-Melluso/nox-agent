@@ -24,6 +24,15 @@ from nox_agent_os.kernel import (
     TaskStatus,
 )
 from nox_agent_os.kernel.kernel import TaskNotFoundError
+from nox_agent_os.modeling import (
+    AuditLevel,
+    ModelConfigError,
+    ModelRoutingError,
+    save_model_config,
+    set_audit_level,
+    set_default_model,
+    set_model_limit,
+)
 from nox_agent_os.storage import StorageError, backup_file, export_events
 from nox_agent_os.workspace import (
     SYSTEM_PROMPT_NAME,
@@ -51,6 +60,8 @@ approvals_app = typer.Typer(help="Inspect and resolve human approvals.")
 kill_app = typer.Typer(help="Control the kernel kill switch.")
 api_app = typer.Typer(help="Serve the local HTTP API.")
 storage_app = typer.Typer(help="Inspect, back up and export workspace storage.")
+model_app = typer.Typer(help="Inspect and configure model routing.")
+audit_app = typer.Typer(help="Configure workspace audit verbosity.")
 
 app.add_typer(task_app, name="task")
 app.add_typer(logs_app, name="logs")
@@ -59,6 +70,8 @@ app.add_typer(approvals_app, name="approvals")
 app.add_typer(kill_app, name="kill")
 app.add_typer(api_app, name="api")
 app.add_typer(storage_app, name="storage")
+app.add_typer(model_app, name="model")
+app.add_typer(audit_app, name="audit")
 
 
 @app.callback(invoke_without_command=True)
@@ -149,6 +162,35 @@ def print_storage_info(context: CliKernelContext) -> None:
     typer.echo("SQLite adapter: available")
 
 
+def print_model_row(context: CliKernelContext, model) -> None:
+    active = "*" if model.model_id == context.model_config.default_model else " "
+    configured_limit = context.model_config.limit_for(model.model_id)
+    limit = configured_limit.max_tokens if configured_limit else model.max_output_tokens
+    typer.echo(
+        f"{active} {model.model_id} "
+        f"backend={model.backend_name} provider={model.provider.value} "
+        f"context={model.context_window} max_tokens={limit}"
+    )
+
+
+def _known_model_ids(context: CliKernelContext) -> set[str]:
+    return {model.model_id for model in context.kernel.model_router.list_models()}
+
+
+def _ensure_known_model(context: CliKernelContext, model_id: str) -> None:
+    if model_id not in _known_model_ids(context):
+        typer.secho(f"[error] Unknown model: {model_id}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+
+def _save_model_config(context: CliKernelContext, config) -> None:
+    try:
+        save_model_config(context.workspace.model_config_path, config)
+    except ModelConfigError as exc:
+        typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+
 @app.command(help=f"Show Nox version ({__version__}).")
 def version() -> None:
     print_banner()
@@ -181,11 +223,13 @@ def init(
         typer.echo(f"Initialized Nox workspace: {result.workspace_dir}")
         typer.echo(f"Created: {result.system_prompt_path}")
         typer.echo(f"Created: {result.identity_path}")
+        typer.echo(f"Model config: {result.model_config_path}")
         return
 
     typer.echo(f"Nox workspace already exists: {result.workspace_dir}")
     typer.echo(f"System prompt: {result.system_prompt_path}")
     typer.echo(f"Identity: {result.identity_path}")
+    typer.echo(f"Model config: {result.model_config_path}")
 
 
 @app.command()
@@ -203,6 +247,7 @@ def update(path: Path | None = typer.Argument(None, help="Workspace directory to
     typer.echo(f"Updated Nox workspace: {result.workspace_dir}")
     typer.echo(f"System prompt: {result.system_prompt_path}")
     typer.echo(f"Identity: {result.identity_path}")
+    typer.echo(f"Model config: {result.model_config_path}")
 
 
 @app.command()
@@ -287,6 +332,7 @@ def doctor(path: Path | None = typer.Argument(None, help="Workspace directory to
     typer.echo(f"[ok] identity updated_at: {workspace.identity.updated_at}")
     typer.echo(f"[ok] system prompt: {workspace.system_prompt_path}")
     typer.echo(f"[ok] event log: {workspace.event_log_path}")
+    typer.echo(f"[ok] model config: {workspace.model_config_path}")
 
 
 @app.command()
@@ -647,6 +693,137 @@ def storage_export_events(
         raise typer.Exit(code=1) from exc
 
     typer.echo(f"Export: {export_path}")
+
+
+@model_app.command("list")
+def model_list(
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to inspect."),
+) -> None:
+    """List available models and current workspace defaults."""
+    print_banner()
+    context = load_cli_context(path)
+    typer.echo(f"Default model: {context.model_config.default_model}")
+    typer.echo(f"Audit level: {context.model_config.audit_level.value}")
+    for model in context.kernel.model_router.list_models():
+        print_model_row(context, model)
+
+
+@model_app.command("set")
+def model_set(
+    model: str = typer.Argument(..., help="Model ID to use as workspace default."),
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to update."),
+) -> None:
+    """Set the default model for this workspace."""
+    print_banner()
+    context = load_cli_context(path)
+    _ensure_known_model(context, model)
+    config = set_default_model(context.model_config, model)
+    _save_model_config(context, config)
+    typer.echo(f"Default model: {model}")
+    typer.echo(f"Config: {context.workspace.model_config_path}")
+
+
+@model_app.command("limit")
+def model_limit(
+    model: str = typer.Argument(..., help="Model ID to limit."),
+    to_word: str = typer.Argument(..., help="Use the literal word 'to'."),
+    max_tokens: int = typer.Argument(..., min=1, help="Maximum output tokens."),
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to update."),
+) -> None:
+    """Set a max token limit for one model."""
+    print_banner()
+    if to_word.lower() != "to":
+        typer.secho(
+            "[error] Expected syntax: nox model limit <model> to <tokens>",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    context = load_cli_context(path)
+    _ensure_known_model(context, model)
+    config = set_model_limit(context.model_config, model, max_tokens)
+    _save_model_config(context, config)
+    typer.echo(f"Model limit: {model} max_tokens={max_tokens}")
+    typer.echo(f"Config: {context.workspace.model_config_path}")
+
+
+@model_app.command("route")
+def model_route(
+    prompt: str = typer.Argument(..., help="Prompt or goal to route through the model router."),
+    model: str | None = typer.Option(None, "--model", "-m", help="Optional model override."),
+    profile: str = typer.Option("balanced", "--profile", help="Reasoning profile."),
+    max_tokens: int | None = typer.Option(None, "--max-tokens", min=1, help="Token override."),
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to use."),
+) -> None:
+    """Route a prompt through the configured model backend."""
+    print_banner()
+    context = load_cli_context(path)
+    if model is not None:
+        _ensure_known_model(context, model)
+    try:
+        result = context.kernel.route_model(
+            prompt,
+            config=context.model_config,
+            workspace_id=context.workspace.workspace_id,
+            instance_id=context.workspace.instance_id,
+            model_id=model,
+            profile=profile,
+            max_tokens=max_tokens,
+            actor="user",
+        )
+    except (ModelConfigError, ModelRoutingError, ValueError) as exc:
+        typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Model: {result.route.model.model_id}")
+    typer.echo(f"Backend: {result.route.model.backend_name}")
+    typer.echo(f"Profile: {result.route.profile.name}")
+    typer.echo(f"Max tokens: {result.route.max_tokens}")
+    typer.echo(f"Audit level: {result.route.audit_level.value}")
+    typer.echo(f"Reason: {result.route.reason}")
+    typer.echo(f"Duration ms: {result.response.duration_ms}")
+    typer.echo(f"Input tokens estimate: {result.response.input_tokens_estimate}")
+    typer.echo(f"Output tokens estimate: {result.response.output_tokens_estimate}")
+    typer.echo(result.response.text)
+
+
+@audit_app.command("status")
+def audit_status(
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to inspect."),
+) -> None:
+    """Show workspace audit verbosity."""
+    print_banner()
+    context = load_cli_context(path)
+    typer.echo(f"Audit level: {context.model_config.audit_level.value}")
+    typer.echo(f"Config: {context.workspace.model_config_path}")
+
+
+@audit_app.command("level")
+def audit_level(
+    level: AuditLevel = typer.Argument(..., help="Audit level to use."),
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to update."),
+) -> None:
+    """Set workspace audit verbosity."""
+    print_banner()
+    context = load_cli_context(path)
+    config = set_audit_level(context.model_config, level)
+    _save_model_config(context, config)
+    typer.echo(f"Audit level: {level.value}")
+    typer.echo(f"Config: {context.workspace.model_config_path}")
+
+
+@audit_app.command("off")
+def audit_off(
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to update."),
+) -> None:
+    """Disable non-critical model audit events."""
+    print_banner()
+    context = load_cli_context(path)
+    config = set_audit_level(context.model_config, AuditLevel.OFF)
+    _save_model_config(context, config)
+    typer.echo("Audit level: off")
+    typer.echo(f"Config: {context.workspace.model_config_path}")
 
 
 @app.command("cli")

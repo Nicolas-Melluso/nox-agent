@@ -15,6 +15,8 @@ def test_help_smoke() -> None:
     assert "api" in result.output
     assert "cli" in result.output
     assert "logs" in result.output
+    assert "model" in result.output
+    assert "audit" in result.output
     assert "upgrade" in result.output
     assert "--install-completion" not in result.output
 
@@ -52,6 +54,7 @@ def test_init_creates_workspace_prompt(tmp_path) -> None:
     assert "___" in result.output
     assert (tmp_path / ".nox" / "system.prompt.md").exists()
     assert (tmp_path / ".nox" / "identity.json").exists()
+    assert (tmp_path / ".nox" / "model.config.json").exists()
     assert (tmp_path / ".nox" / "events.jsonl").exists()
 
     identity = json.loads((tmp_path / ".nox" / "identity.json").read_text(encoding="utf-8"))

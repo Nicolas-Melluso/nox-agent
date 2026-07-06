@@ -89,6 +89,18 @@ Cubren:
 - exposicion de identidad desde API local,
 - migracion SQLite de storage schema `1 -> 2` para `instance_id`.
 
+## v0.7
+
+Los tests de Model Router viven en `tests/test_modeling_v07.py` y `tests/test_cli_model_v07.py`.
+
+Cubren:
+
+- contrato inicial de `ModelRouter` con `MockBackend`,
+- emision de eventos `model_route_selected` y `model_invocation_completed`,
+- desactivacion de auditoria con nivel `off`,
+- comandos `nox model list`, `nox model set`, `nox model limit` y `nox model route`,
+- comandos `nox audit status`, `nox audit level` y `nox audit off`.
+
 ## Comandos futuros posibles
 
 ```text

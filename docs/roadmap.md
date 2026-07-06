@@ -190,6 +190,26 @@ Pendiente para fases posteriores:
 - Crear `RoutingPolicy`.
 - Registrar razon de seleccion, perfil y presupuesto.
 
+Estado actual:
+
+- `nox_agent_os.modeling` creado como capa inicial de modelos.
+- `ModelBackend`, `ModelRequest`, `ModelResponse`, `ModelRoute` y `ModelInvocationResult` creados.
+- `MockBackend` implementado con modelos `mock-fast`, `mock-balanced` y `mock-deep`.
+- `ModelRegistry`, `ReasoningProfile`, `RoutingPolicy` y `ModelRouter` implementados.
+- `.nox/model.config.json` creado para modelo default, limites por modelo y nivel de auditoria.
+- `nox model list`, `nox model set`, `nox model limit <modelo> to <tokens>` y `nox model route` implementados.
+- `nox audit status`, `nox audit level` y `nox audit off` implementados.
+- Eventos `model_route_selected` y `model_invocation_completed` agregados al audit trail cuando la auditoria no esta en `off`.
+- Niveles de auditoria iniciales: `off`, `minimal`, `normal`, `debug` y `trace`.
+
+Pendiente para fases posteriores:
+
+- API HTTP especifica para modelos si la necesitamos como superficie estable.
+- Streaming de respuestas.
+- Costos reales, cuotas y credenciales.
+- Modelos reales via `LlamaCppBackend` en v0.8.
+- Integracion con Codex como subagente externo gobernado, no como backend plano de inferencia.
+
 ## v0.8 - llama.cpp Backend
 
 - Agregar `LlamaCppBackend`.

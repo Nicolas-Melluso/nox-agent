@@ -111,6 +111,21 @@ Los adapters iniciales son:
 
 La memoria semantica no vive aun en v0.6. `EvidenceStore` prepara provenance y evidencia para herramientas/RAG futuros, pero no decide que debe recordar el agente.
 
+## Model Router inicial
+
+Desde v0.7, Nox tiene un `ModelRouter` operativo con `MockBackend`. Esto no ejecuta un modelo real, pero valida el contrato completo:
+
+```text
+CLI/API futura
+  -> AgentKernel
+  -> ModelRouter
+  -> RoutingPolicy
+  -> ModelRegistry
+  -> ModelBackend
+```
+
+La configuracion vive en `.nox/model.config.json` y define modelo default, limites por modelo y nivel de auditoria. Los eventos de modelo se emiten segun el nivel configurado, para evitar poblar logs cuando no hace falta diagnostico.
+
 ## Fuente visual
 
 El diagrama de referencia vive en:

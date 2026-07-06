@@ -24,6 +24,13 @@ from nox_agent_os.kernel.audit import AuditTrail
 from nox_agent_os.kernel.events import EventBus, EventStore, InMemoryEventStore
 from nox_agent_os.kernel.monitor import KernelResourceSnapshot, ResourceMonitor
 from nox_agent_os.kernel.state import StateMachineKernel
+from nox_agent_os.modeling import (
+    ModelInvocationResult,
+    ModelRequest,
+    ModelRouter,
+    ModelWorkspaceConfig,
+    create_default_model_router,
+)
 
 KERNEL_TASK_ID = "kernel"
 
@@ -46,6 +53,7 @@ class AgentKernel:
         approval_queue: InMemoryApprovalQueue | None = None,
         kill_switch: KillSwitch | None = None,
         doom_loop_guard: DoomLoopGuard | None = None,
+        model_router: ModelRouter | None = None,
     ) -> None:
         self.event_store = event_store or InMemoryEventStore()
         self.event_bus = EventBus(self.event_store)
@@ -54,6 +62,7 @@ class AgentKernel:
         self.approval_queue = approval_queue or InMemoryApprovalQueue()
         self.kill_switch = kill_switch or KillSwitch()
         self.doom_loop_guard = doom_loop_guard or DoomLoopGuard()
+        self.model_router = model_router or create_default_model_router()
         self.audit_trail = AuditTrail(self.event_store)
         self.resource_monitor = ResourceMonitor(
             event_store=self.event_store,
@@ -313,6 +322,29 @@ class AgentKernel:
 
     def resource_snapshot(self) -> KernelResourceSnapshot:
         return self.resource_monitor.snapshot()
+
+    def route_model(
+        self,
+        prompt: str,
+        *,
+        config: ModelWorkspaceConfig,
+        workspace_id: str = "default",
+        instance_id: str | None = None,
+        model_id: str | None = None,
+        profile: str = "balanced",
+        max_tokens: int | None = None,
+        actor: str = "user",
+    ) -> ModelInvocationResult:
+        request = ModelRequest(
+            prompt=prompt,
+            workspace_id=workspace_id,
+            instance_id=instance_id,
+            model_id=model_id,
+            profile=profile,
+            max_tokens=max_tokens,
+            actor=actor,
+        )
+        return self.model_router.route(request, config, self.event_bus)
 
     def get_task(self, task_id: str) -> TaskState:
         events = self.event_store.list_for_task(task_id)

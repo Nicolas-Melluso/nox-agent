@@ -23,6 +23,7 @@ defaults
 ```text
 .nox/
   identity.json
+  model.config.json
   system.prompt.md
   events.jsonl
   backups/
@@ -41,6 +42,7 @@ Los registros que deben auditarse, reproducirse o migrarse deben vivir como dato
 | Tipo de dato | Formato inicial | Fuente canonica | Notas |
 | --- | --- | --- | --- |
 | Identidad de workspace | JSON | `.nox/identity.json` | Contiene `workspace_id`, `instance_id`, version y referencias al engine. |
+| Config de modelos | JSON | `.nox/model.config.json` | Contiene modelo default, limites por modelo y nivel de auditoria. |
 | Workspace prompt | Markdown + frontmatter | `.nox/system.prompt.md` | Primer punto local creado por `nox init`. |
 | Config humana futura | YAML | `.nox/config.yaml` futuro | Editable por usuario cuando exista configuracion expandida. |
 | Defaults de producto | TOML/JSON futuro | paquete instalado | No se editan a mano. |

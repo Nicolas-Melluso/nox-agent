@@ -37,7 +37,7 @@
   - `MockBackend`
   - `LlamaCppBackend`
   - `OpenAIBackend`
-  - `CodexBackend`
+  - `CodexAgentBackend`
   - `OllamaBackend`
   - `VllmBackend`
 

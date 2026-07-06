@@ -17,7 +17,7 @@ Backends iniciales y futuros:
 - `MockBackend`
 - `LlamaCppBackend`
 - `OpenAIBackend`
-- `CodexBackend`
+- `CodexAgentBackend`
 - `OllamaBackend`
 - `VllmBackend`
 
@@ -27,6 +27,11 @@ Backends iniciales y futuros:
 - `MockBackend` se implementara antes que un modelo real para habilitar tests y routing.
 - Providers con red, costo o credenciales requeriran policy y HITL propios.
 - El Model Router registrara backend, modelo, perfil, presupuesto, riesgo y razon de seleccion.
+- Codex se modelara como agente/subagente externo gobernado, no como backend de inferencia plano, salvo que una fase futura demuestre que conviene simplificarlo.
+
+## Nota v0.7
+
+v0.7 implementa `MockBackend`, `ModelRegistry`, `RoutingPolicy`, perfiles iniciales, config por workspace y auditoria por niveles.
 
 ## Reversibilidad
 

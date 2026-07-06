@@ -60,13 +60,14 @@ uv run nox doctor
 ```text
 .nox/
   identity.json
+  model.config.json
   system.prompt.md
   events.jsonl
 ```
 
 El workspace no contiene el sistema completo. Solo declara como debe conectarse ese proyecto local con el engine instalado.
 
-Con el tiempo, `.nox` puede guardar estado local, eventos, config del workspace, evidencia y referencias a capacidades disponibles en el engine instalado. La logica core sigue viviendo en la instalacion general de Nox.
+Con el tiempo, `.nox` puede guardar estado local, eventos, config del workspace, evidencia y referencias a capacidades disponibles en el engine instalado. Desde v0.7, `.nox/model.config.json` guarda modelo default, limites por modelo y nivel de auditoria. La logica core sigue viviendo en la instalacion general de Nox.
 
 El prompt del workspace guarda una referencia al engine instalado:
 

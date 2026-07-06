@@ -6,9 +6,9 @@ Este proyecto no empieza como un chatbot. Empieza como un agente modular local: 
 
 ## Estado
 
-Version actual de trabajo: `v0.6.1 - Identidad de instancia`.
+Version actual de trabajo: `v0.7 - Model Router sin modelo real`.
 
-Ya existe CLI instalable, scaffolding de workspace, identidad estable para `.nox`, kernel event-sourced, gobierno inicial, observabilidad minima, event log JSONL por workspace, API HTTP local y adapters de persistencia `InMemory`, `JSONL` y `SQLite`. Todavia no hay Tool Runtime, modelo local ni memoria semantica.
+Ya existe CLI instalable, scaffolding de workspace, identidad estable para `.nox`, kernel event-sourced, gobierno inicial, observabilidad minima, event log JSONL por workspace, API HTTP local, adapters de persistencia `InMemory`, `JSONL` y `SQLite`, y Model Router inicial con `MockBackend`. Todavia no hay Tool Runtime, modelo local real ni memoria semantica.
 
 ## Modelo de instalacion
 
@@ -24,6 +24,7 @@ Proyecto del usuario
   -> .nox/
      -> system.prompt.md
      -> identity.json
+     -> model.config.json
      -> events.jsonl
      -> estado/config/evidencia del workspace
      -> referencias al engine instalado
@@ -72,6 +73,13 @@ nox prompt
 nox update
 nox upgrade --check
 nox status
+nox audit status
+nox audit level normal
+nox audit off
+nox model list
+nox model set mock-balanced
+nox model limit mock-balanced to 4096
+nox model route "objetivo de prueba"
 nox task create "objetivo"
 nox task list
 nox task show <task_id>
@@ -103,6 +111,9 @@ nox storage export-events --output events.json
 - Consultar snapshot operativo con `ResourceMonitor`.
 - Persistir eventos del workspace en `.nox/events.jsonl`.
 - Correlacionar eventos nuevos con `workspace_id` estable e `instance_id`.
+- Configurar modelo default, limites de tokens y nivel de auditoria en `.nox/model.config.json`.
+- Rutear prompts por `ModelRouter` usando `MockBackend`.
+- Auditar seleccion e invocacion de modelo por niveles: `off`, `minimal`, `normal`, `debug` y `trace`.
 - Usar puertos de storage para eventos, tareas, config y evidencia.
 - Probar persistencia via adapters `InMemory`, `JSONL` y `SQLite`.
 - Operar el kernel desde comandos CLI reales.
