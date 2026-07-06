@@ -35,6 +35,15 @@ Diferenciacion a validar con cuidado:
 - Modelos y niveles de razonamiento reemplazables en tiempo de ejecucion.
 - UX de confianza: el sistema debe mostrar riesgo, evidencia, permisos y razon de cada accion sensible.
 
+Identidad refinada:
+
+- Nox se define como agente local modular, no como sistema operativo literal.
+- La metafora de kernel/OS se conserva solo como arquitectura interna.
+- La instalacion general de Nox contiene engine, runtime, policies, adapters, schemas y defaults.
+- Cada `.nox` es una instancia de workspace, no una copia del agente completo.
+- Cada instancia `.nox` debe tener `workspace_id` e `instance_id` propios para logs, auditoria, observabilidad, backups y memoria futura.
+- El roadmap debe seguir contemplando las capas de una pila agentica: modelos, runtime, protocolos, orquestacion, herramientas, superficies, observabilidad y gobernanza.
+
 ## 2. Principios no negociables
 
 1. El modelo es reemplazable. El sistema no depende de un proveedor ni de una familia de modelos.
@@ -1162,41 +1171,42 @@ Entregable J - Plataforma extensible
 6. Mantener `docs/adr/0014-observability-from-kernel.md` como decision de observabilidad minima.
 7. Mantener `docs/adr/0015-cli-and-jsonl-event-log.md` como decision de CLI real y JSONL minimo.
 8. Mantener `docs/adr/0016-local-api-adapter.md` como decision de API local.
-9. Agregar ADR futuro `0017-evidence-ledger.md`.
-10. Agregar ADR futuro `0018-state-machine-kernel.md` si los ejes de estado requieren decision formal adicional.
-11. Mantener `docs/model-backends.md` y `docs/adr/0009-model-backend-and-providers.md` como decision de modelos reemplazables.
-12. Agregar `docs/configuration.md` con config/env vars, precedencia, perfiles, paths, secrets y limites.
-13. Agregar `docs/testing-and-evals.md` con niveles `none`, `smoke`, `unit`, `contract`, `safety`, `integration`, `eval` y `full`.
-14. Agregar `docs/schemas.md` con eventos, tareas, tool calls, evidencia, memoria, state machine y perfiles de razonamiento.
-15. Agregar `docs/data-lifecycle.md` con versionado, borrado, migraciones, retencion, backup/restore y provenance.
-16. Implementar `StateMachineKernel`.
-17. Implementar `TaskState` event-sourced.
-18. Implementar `TransitionGuard`.
-19. Mantener `DoomLoopGuard` minimo.
-20. Implementar `EventBus`.
-21. Implementar `SessionStore`.
-22. Implementar logs estructurados con `trace_id`.
-23. Mantener audit trail minimo por eventos del kernel.
-24. Mantener `PolicyEngine` minimo con read/write/execute/network/delete/send/credentials.
-25. Mantener `ApprovalQueue` en memoria.
-26. Mantener `KillSwitch`.
-27. Mantener `ResourceMonitor` basico para procesos/tareas.
-28. Crear eval: una tarea se reconstruye por replay tras reinicio.
-29. Crear eval: una accion de escritura debe pedir aprobacion.
-30. Crear eval: transicion invalida emite `state_transition_denied`.
-31. Crear eval: doom loop repetible termina en `doom_loop_detected`.
-32. Crear eval: Kill Switch bloquea nueva ejecucion.
-33. Implementar `ModelBackend` interface.
-34. Implementar `LlamaCppBackend`.
-35. Implementar `ModelRegistry`.
-36. Implementar `ReasoningProfile` ejecutable.
-37. Implementar `RoutingPolicy` minima.
-38. Crear eval: el router registra modelo, perfil, presupuesto, riesgo y razon de seleccion.
-39. Implementar CLI de tareas pasando por Governance.
-40. Mantener CLI real pasando por Governance y `.nox/events.jsonl`.
-41. Mantener API local pasando por Governance y `.nox/events.jsonl`.
-42. Implementar primer tool/source adapter: filesystem read-only con provenance.
-43. Implementar `EvidenceLedger` minimo.
+9. Mantener `docs/adr/0017-modular-persistence.md` como decision de persistencia modular inicial.
+10. Agregar ADR futuro `0018-evidence-ledger.md`.
+11. Agregar ADR futuro `0019-state-machine-kernel.md` si los ejes de estado requieren decision formal adicional.
+12. Mantener `docs/model-backends.md` y `docs/adr/0009-model-backend-and-providers.md` como decision de modelos reemplazables.
+13. Agregar `docs/configuration.md` con config/env vars, precedencia, perfiles, paths, secrets y limites.
+14. Agregar `docs/testing-and-evals.md` con niveles `none`, `smoke`, `unit`, `contract`, `safety`, `integration`, `eval` y `full`.
+15. Agregar `docs/schemas.md` con eventos, tareas, tool calls, evidencia, memoria, state machine y perfiles de razonamiento.
+16. Agregar `docs/data-lifecycle.md` con versionado, borrado, migraciones, retencion, backup/restore y provenance.
+17. Implementar `StateMachineKernel`.
+18. Implementar `TaskState` event-sourced.
+19. Implementar `TransitionGuard`.
+20. Mantener `DoomLoopGuard` minimo.
+21. Implementar `EventBus`.
+22. Implementar `SessionStore`.
+23. Implementar logs estructurados con `trace_id`.
+24. Mantener audit trail minimo por eventos del kernel.
+25. Mantener `PolicyEngine` minimo con read/write/execute/network/delete/send/credentials.
+26. Mantener `ApprovalQueue` en memoria.
+27. Mantener `KillSwitch`.
+28. Mantener `ResourceMonitor` basico para procesos/tareas.
+29. Crear eval: una tarea se reconstruye por replay tras reinicio.
+30. Crear eval: una accion de escritura debe pedir aprobacion.
+31. Crear eval: transicion invalida emite `state_transition_denied`.
+32. Crear eval: doom loop repetible termina en `doom_loop_detected`.
+33. Crear eval: Kill Switch bloquea nueva ejecucion.
+34. Implementar `ModelBackend` interface.
+35. Implementar `LlamaCppBackend`.
+36. Implementar `ModelRegistry`.
+37. Implementar `ReasoningProfile` ejecutable.
+38. Implementar `RoutingPolicy` minima.
+39. Crear eval: el router registra modelo, perfil, presupuesto, riesgo y razon de seleccion.
+40. Implementar CLI de tareas pasando por Governance.
+41. Mantener CLI real pasando por Governance y `.nox/events.jsonl`.
+42. Mantener API local pasando por Governance y `.nox/events.jsonl`.
+43. Implementar primer tool/source adapter: filesystem read-only con provenance.
+44. Implementar `EvidenceLedger` minimo.
 
 ## 9. Riesgos principales
 

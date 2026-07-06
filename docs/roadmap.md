@@ -91,7 +91,7 @@ Pendiente para fases posteriores:
 - Evitar logica de negocio dentro de la CLI.
 - Exponer tareas, eventos, approvals, kill switch y verificaciones.
 - Agregar `JsonlEventStore` minimo en `.nox/events.jsonl` para que la CLI sea usable entre invocaciones.
-- Agregar `nox shell` como REPL operativo con kernel vivo.
+- Agregar `nox cli` como sesion interactiva operativa con kernel vivo.
 
 Estado actual:
 
@@ -99,12 +99,12 @@ Estado actual:
 - `nox init` crea `.nox/events.jsonl`.
 - `nox status` muestra snapshot operativo del kernel.
 - `nox task create/list/show/transition` opera sobre eventos persistidos.
-- `nox events list/task` inspecciona el audit trail.
+- `nox logs list/task` inspecciona el audit trail.
 - `nox policy check` registra decisiones y approvals.
 - `nox approvals list/approve/reject` rehidrata approvals pendientes desde eventos.
 - `nox kill status/on/off` persiste estado del kill switch via eventos.
-- `nox shell` permite operar tareas, policy, approvals, events y kill switch en una sesion viva.
-- Tests v0.4 cubren persistencia JSONL, comandos CLI y shell basico.
+- `nox cli` permite operar tareas, policy, approvals, logs y kill switch en una sesion viva.
+- Tests v0.4 cubren persistencia JSONL, comandos CLI y sesion interactiva basica.
 
 Pendiente para fases posteriores:
 
@@ -139,6 +139,32 @@ Pendiente para fases posteriores:
 - Implementar adaptadores `InMemory`, `JSONL` y `SQLite`.
 - Agregar `schema_version`, migraciones iniciales y export/backup basico.
 - Tomar `.nox/events.jsonl` de v0.4 como adapter inicial, no como persistencia final.
+
+Estado actual:
+
+- `nox_agent_os.storage` creado como capa de persistencia modular.
+- Puertos `EventStore`, `TaskStore`, `ConfigStore` y `EvidenceStore` formalizados.
+- Adapters `InMemory`, `JSONL` y `SQLite` implementados para eventos, tareas, config y evidencia.
+- SQLite crea tablas de eventos, tareas, config, evidencia y `schema_migrations`.
+- CLI agrega `nox storage info`, `nox storage backup` y `nox storage export-events`.
+- CLI agrega `nox upgrade --check` como contrato inicial para actualizacion futura del engine instalado.
+- Tests v0.6 cubren contratos de storage, migracion SQLite, backup/export y comandos CLI.
+
+Pendiente para fases posteriores:
+
+- Decidir si/como migrar workspaces de JSONL default a SQLite default.
+- Agregar stores especificos de memoria cuando exista semantica de memoria.
+- Conectar `EvidenceStore` con Tool Runtime y Evidence Ledger en v0.9.
+
+## v0.6.1 - Identidad de Instancia
+
+- Definir Nox publicamente como agente local modular.
+- Crear `.nox/identity.json`.
+- Generar `workspace_id` estable para el proyecto.
+- Generar `instance_id` para la instancia `.nox` concreta.
+- Registrar version de engine, executable path, fecha de creacion y ultima actualizacion.
+- Hacer que `nox doctor` muestre `workspace_id` e `instance_id`.
+- Hacer que eventos/logs futuros puedan incluir ambas identidades sin depender solo del path local.
 
 ## v0.7 - Model Router Sin Modelo Real
 
@@ -175,6 +201,7 @@ Pendiente para fases posteriores:
 - Logs, traces y audit trail.
 - Tests por etapas: none, smoke, unit, contract, safety, integration, eval, full.
 - Instalacion guiada funcionando.
+- `nox upgrade` descarga la ultima release desde GitHub, valida el artefacto y actualiza el engine instalado.
 
 ## v1.1+ - Evolucion
 

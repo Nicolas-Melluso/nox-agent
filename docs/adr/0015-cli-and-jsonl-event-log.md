@@ -32,8 +32,8 @@ La CLI carga un kernel por comando usando ese event log, rehidrata controles ope
 - `nox task list`
 - `nox task show`
 - `nox task transition`
-- `nox events list`
-- `nox events task`
+- `nox logs list`
+- `nox logs task`
 - `nox policy check`
 - `nox approvals list`
 - `nox approvals approve`
@@ -41,9 +41,11 @@ La CLI carga un kernel por comando usando ese event log, rehidrata controles ope
 - `nox kill status`
 - `nox kill on`
 - `nox kill off`
-- `nox shell`
+- `nox cli`
 
-`nox shell` mantiene un kernel vivo para pruebas interactivas y flujos de approvals, pero tambien escribe eventos en el mismo JSONL.
+`nox cli` mantiene un kernel vivo para pruebas interactivas y flujos de approvals, pero tambien escribe eventos en el mismo JSONL.
+
+Nota v0.6: los comandos se nombran como `logs` y `cli` para reflejar mejor la experiencia de usuario. Los eventos siguen siendo el dato canonico interno.
 
 ## Consecuencias
 

@@ -1,14 +1,34 @@
-# Local Agent OS
+# Nox
 
-Plataforma local para ejecutar agentes con memoria, herramientas, gobierno, seguridad, observabilidad y evaluacion.
+Agente local modular para ejecutar tareas con memoria futura, herramientas, gobierno, seguridad, observabilidad y evaluacion.
 
-Este proyecto no empieza como un chatbot. Empieza como un sistema operativo agente local: un kernel gobernable donde modelos, herramientas, persistencia, interfaces y politicas puedan reemplazarse sin reescribir el nucleo.
+Este proyecto no empieza como un chatbot. Empieza como un agente modular local: un kernel gobernable donde modelos, herramientas, persistencia, interfaces y politicas puedan reemplazarse sin reescribir el nucleo.
 
 ## Estado
 
-Version actual de trabajo: `v0.5 - API local sobre el kernel gobernable`.
+Version actual de trabajo: `v0.6 - Persistencia modular inicial`.
 
-Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced, gobierno inicial, observabilidad minima, event log JSONL por workspace y API HTTP local. Todavia no hay Tool Runtime, modelo local ni persistencia SQLite conectada.
+Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced, gobierno inicial, observabilidad minima, event log JSONL por workspace, API HTTP local y adapters de persistencia `InMemory`, `JSONL` y `SQLite`. Todavia no hay Tool Runtime, modelo local ni memoria semantica.
+
+## Modelo de instalacion
+
+Nox se instala como agente modular general a nivel usuario o sistema. Esa instalacion provee runtime, kernel, adapters, politicas, schemas y defaults.
+
+Cada proyecto crea una instancia local en `.nox/`. Esa instancia no contiene todo el agente: guarda metadata, estado del workspace, eventos, referencias al engine instalado y, mas adelante, configuracion local de herramientas o conexiones habilitadas para ese workspace.
+
+```text
+Nox instalado
+  -> engine general, adapters, politicas, schemas, defaults
+
+Proyecto del usuario
+  -> .nox/
+     -> system.prompt.md
+     -> events.jsonl
+     -> estado/config/evidencia del workspace
+     -> referencias al engine instalado
+```
+
+La instancia `.nox` debe tener identidad propia. El objetivo es registrar `workspace_id` e `instance_id` para que logs, auditoria, observabilidad, backups y futuras memorias puedan correlacionar eventos sin depender solo del path local.
 
 ## Artefactos base
 
@@ -33,14 +53,15 @@ Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced, gobier
 - JSON/JSONL para informacion del sistema, eventos, logs y evidencia.
 - HITL por defecto para acciones sensibles, irreversibles, externas o ambiguas.
 - `nox-agent-os` sera el paquete distribuible y `nox` el comando publico.
-- `nox init` crea un workspace local minimo en `.nox/system.prompt.md`.
+- `nox init` crea una instancia local minima en `.nox/system.prompt.md`.
+- `.nox` no es el engine; es el estado y metadata del workspace.
 
 ## Fuente de verdad
 
 Los ADRs en `docs/adr/` son la fuente canonica para decisiones aceptadas.
 README, roadmap y stack resumen esas decisiones para orientar el trabajo.
 
-## Comandos futuros esperados
+## Comandos principales
 
 ```text
 nox init
@@ -48,18 +69,25 @@ nox doctor
 nox version
 nox prompt
 nox update
+nox upgrade --check
 nox status
 nox task create "objetivo"
 nox task list
 nox task show <task_id>
 nox task transition <task_id> running --reason "start"
-nox events list
+nox logs list
+nox logs task <task_id>
 nox policy check <task_id> write --target docs/example.md
 nox approvals list
 nox kill on --reason "freeze"
-nox shell
+nox cli
 nox api serve
+nox storage info
+nox storage backup
+nox storage export-events --output events.json
 ```
+
+`nox update` refresca la metadata del workspace `.nox`. `nox upgrade` queda reservado para actualizar el engine instalado; en v0.6 existe como comando seguro de diagnostico/check, pero la descarga e instalacion automatica desde GitHub queda para una fase posterior.
 
 ## Capacidades actuales del kernel
 
@@ -73,6 +101,8 @@ nox api serve
 - Consultar audit trail inicial desde eventos en memoria.
 - Consultar snapshot operativo con `ResourceMonitor`.
 - Persistir eventos del workspace en `.nox/events.jsonl`.
+- Usar puertos de storage para eventos, tareas, config y evidencia.
+- Probar persistencia via adapters `InMemory`, `JSONL` y `SQLite`.
 - Operar el kernel desde comandos CLI reales.
 - Operar el kernel desde API HTTP local.
 

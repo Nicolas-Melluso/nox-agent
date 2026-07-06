@@ -11,6 +11,9 @@ def test_help_smoke() -> None:
     assert result.exit_code == 0
     assert "Local agent OS workspace launcher" in result.output
     assert "api" in result.output
+    assert "cli" in result.output
+    assert "logs" in result.output
+    assert "upgrade" in result.output
     assert "--install-completion" not in result.output
 
 
@@ -29,6 +32,14 @@ def test_api_help_smoke() -> None:
     assert "Serve the local HTTP API" in result.output
     assert "--host" in result.output
     assert "--port" in result.output
+
+
+def test_upgrade_check_is_non_destructive() -> None:
+    result = runner.invoke(app, ["upgrade", "--check"])
+
+    assert result.exit_code == 0
+    assert "Upgrade check only" in result.output
+    assert "Current version:" in result.output
 
 
 def test_init_creates_workspace_prompt(tmp_path) -> None:

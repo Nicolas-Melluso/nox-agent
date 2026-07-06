@@ -4,7 +4,11 @@ La plataforma debe poder instalarse, inicializarse, diagnosticarse y actualizars
 
 El objetivo de producto es una experiencia parecida a `git`, `npm init` o `npx create-*`, usando el ecosistema Python y uv.
 
-Nox se instala una vez a nivel usuario o sistema. Cada workspace solo necesita una carpeta local `.nox` con el system prompt y metadata minima.
+Nox se instala una vez a nivel usuario o sistema. Esa instalacion es el agente modular general: contiene runtime, kernel, adapters, politicas, schemas y defaults.
+
+Cada workspace solo necesita una carpeta local `.nox` con el system prompt y metadata minima. Esa carpeta es una instancia del workspace, no una copia del agente completo.
+
+La instancia `.nox` debe evolucionar hacia una identidad propia con `workspace_id` e `instance_id`, para que auditoria, observabilidad, backups y memoria futura puedan correlacionarse aunque cambien paths o versiones del engine.
 
 ## Nombres canonicos
 
@@ -60,6 +64,8 @@ uv run nox doctor
 
 El workspace no contiene el sistema completo. Solo declara como debe conectarse ese proyecto local con el engine instalado.
 
+Con el tiempo, `.nox` puede guardar estado local, eventos, config del workspace, evidencia y referencias a capacidades disponibles en el engine instalado. La logica core sigue viviendo en la instalacion general de Nox.
+
 El prompt del workspace guarda una referencia al engine instalado:
 
 ```yaml
@@ -79,6 +85,27 @@ nox update
 ```
 
 Eso refresca `.nox/system.prompt.md` con la referencia actual del engine instalado.
+
+`nox update` no instala una version nueva de Nox. Solo actualiza metadata local del workspace.
+
+Para actualizar el engine instalado se reserva:
+
+```powershell
+nox upgrade
+```
+
+En v0.6, `nox upgrade --check` muestra version, modo de engine, ejecutable activo y fuente esperada. La descarga e instalacion automatica desde GitHub queda pendiente para una fase posterior.
+
+Comportamiento objetivo futuro:
+
+```text
+nox upgrade
+  -> consulta la ultima release disponible en GitHub
+  -> descarga NoxSetup.exe
+  -> valida version/hash/firma cuando exista
+  -> ejecuta el instalador
+  -> deja el comando nox apuntando al engine actualizado
+```
 
 ## Entry point
 

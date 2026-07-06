@@ -49,7 +49,7 @@ Cubren:
 - `nox status`,
 - policy check con approval rehidratable,
 - kill switch persistente entre invocaciones,
-- shell interactivo basico.
+- sesion interactiva basica con `nox cli`.
 
 ## v0.5
 
@@ -62,6 +62,20 @@ Cubren:
 - eventos por tarea,
 - policy check con approval rehidratable,
 - kill switch bloqueando nuevas tareas.
+
+## v0.6
+
+Los tests de persistencia modular viven en `tests/test_storage_v06.py`.
+
+Cubren:
+
+- contrato de `EventStore` en `InMemory`, `JSONL` y `SQLite`,
+- puertos `TaskStore`, `ConfigStore` y `EvidenceStore`,
+- migracion inicial de SQLite,
+- backup del event log,
+- export JSON normalizado de eventos,
+- comandos `nox storage info`, `nox storage backup` y `nox storage export-events`.
+- comando `nox upgrade --check` como verificacion no destructiva del engine instalado.
 
 ## Comandos futuros posibles
 

@@ -4,6 +4,22 @@
 
 Proceso gobernado que recibe una tarea, usa capacidades permitidas, emite eventos y finaliza bajo condiciones declaradas.
 
+## Agente modular
+
+Agente instalado como plataforma local reemplazable por modulos. En Nox, el agente modular general contiene runtime, kernel, adapters, politicas, schemas y defaults.
+
+## Instancia de workspace
+
+Carpeta `.nox` dentro de un proyecto. No es el agente completo; es la instancia local que conserva metadata, identidad, eventos, estado, config, evidencia y referencias al engine instalado.
+
+## Workspace ID
+
+Identidad estable de un workspace/proyecto Nox. Debe usarse para correlacionar logs, auditoria, almacenamiento y observabilidad aunque cambie el path local.
+
+## Instance ID
+
+Identidad de una instancia `.nox` concreta. Si `.nox` se borra y se inicializa otra vez, esta identidad puede cambiar aunque el proyecto sea el mismo.
+
 ## Kernel
 
 Nucleo del sistema. Coordina estado, politicas, eventos, permisos, herramientas, modelos y persistencia mediante contratos.

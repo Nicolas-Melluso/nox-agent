@@ -24,6 +24,7 @@ from nox_agent_os.kernel import (
     TaskStatus,
 )
 from nox_agent_os.kernel.kernel import TaskNotFoundError
+from nox_agent_os.storage import StorageError, backup_file, export_events
 from nox_agent_os.workspace import (
     SYSTEM_PROMPT_NAME,
     WORKSPACE_DIR_NAME,
@@ -44,18 +45,20 @@ app = typer.Typer(
     no_args_is_help=False,
 )
 task_app = typer.Typer(help="Manage kernel tasks.")
-events_app = typer.Typer(help="Inspect the workspace event log.")
+logs_app = typer.Typer(help="Inspect workspace logs and event history.")
 policy_app = typer.Typer(help="Evaluate governed capabilities.")
 approvals_app = typer.Typer(help="Inspect and resolve human approvals.")
 kill_app = typer.Typer(help="Control the kernel kill switch.")
 api_app = typer.Typer(help="Serve the local HTTP API.")
+storage_app = typer.Typer(help="Inspect, back up and export workspace storage.")
 
 app.add_typer(task_app, name="task")
-app.add_typer(events_app, name="events")
+app.add_typer(logs_app, name="logs")
 app.add_typer(policy_app, name="policy")
 app.add_typer(approvals_app, name="approvals")
 app.add_typer(kill_app, name="kill")
 app.add_typer(api_app, name="api")
+app.add_typer(storage_app, name="storage")
 
 
 @app.callback(invoke_without_command=True)
@@ -130,9 +133,17 @@ def print_snapshot(context: CliKernelContext) -> None:
     typer.echo(f"Last event: {snapshot.last_event_type or 'none'}")
 
 
-@app.command()
+def print_storage_info(context: CliKernelContext) -> None:
+    events = context.event_store.list_all()
+    typer.echo("Storage backend: jsonl")
+    typer.echo(f"Workspace: {context.workspace.workspace_dir.parent}")
+    typer.echo(f"Event log: {context.workspace.event_log_path}")
+    typer.echo(f"Events: {len(events)}")
+    typer.echo("SQLite adapter: available")
+
+
+@app.command(help=f"Show Nox version ({__version__}).")
 def version() -> None:
-    """Show the installed Nox version."""
     print_banner()
     typer.echo(f"nox {__version__}")
 
@@ -185,8 +196,45 @@ def update(path: Path | None = typer.Argument(None, help="Workspace directory to
 
 
 @app.command()
+def upgrade(
+    check: bool = typer.Option(
+        False,
+        "--check",
+        help="Show upgrade source and current engine details without changing anything.",
+    ),
+    source: str = typer.Option(
+        "https://github.com/Nicolas-Melluso/nox-agent",
+        "--source",
+        help="Upgrade source repository or release feed.",
+    ),
+) -> None:
+    """Upgrade the installed Nox engine."""
+    print_banner()
+    engine = get_engine_reference()
+
+    typer.echo(f"Current version: {__version__}")
+    typer.echo(f"Engine mode: {engine.mode}")
+    typer.echo(f"Engine executable: {engine.executable_path}")
+    typer.echo(f"Upgrade source: {source}")
+
+    if check:
+        typer.echo("Upgrade check only. No files changed.")
+        return
+
+    typer.echo(
+        "Automatic engine upgrade is not implemented yet. "
+        "For now, build and install a fresh NoxSetup.exe from the repo."
+    )
+    typer.echo(
+        "Development flow: powershell -ExecutionPolicy Bypass -File "
+        ".\\scripts\\build_nox_setup.ps1 -Clean"
+    )
+    raise typer.Exit(code=1)
+
+
+@app.command()
 def doctor(path: Path | None = typer.Argument(None, help="Workspace directory to inspect.")) -> None:
-    """Inspect the local Nox installation and current workspace."""
+    """Show health for the Nox engine and current workspace."""
     print_banner()
     target_path = Path.cwd() if path is None else path
     root = target_path.resolve()
@@ -311,13 +359,13 @@ def task_transition(
     print_task(task)
 
 
-@events_app.command("list")
-def events_list(
+@logs_app.command("list")
+def logs_list(
     limit: int = typer.Option(20, "--limit", "-n", min=1, help="Maximum events to show."),
     event_type: str | None = typer.Option(None, "--type", help="Optional event type filter."),
     path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to use."),
 ) -> None:
-    """List recent events."""
+    """List recent workspace log events."""
     print_banner()
     context = load_cli_context(path)
     try:
@@ -330,12 +378,12 @@ def events_list(
         print_event(event)
 
 
-@events_app.command("task")
-def events_task(
+@logs_app.command("task")
+def logs_task(
     task_id: str = typer.Argument(..., help="Task ID to inspect."),
     path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to use."),
 ) -> None:
-    """List events for one task."""
+    """List log events for one task."""
     print_banner()
     context = load_cli_context(path)
     for event in context.kernel.audit_trail.list_events(task_id=task_id):
@@ -528,14 +576,62 @@ def api_serve(
     )
 
 
-@app.command()
-def shell(
-    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to use."),
+@storage_app.command("info")
+def storage_info(
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to inspect."),
 ) -> None:
-    """Start a small interactive Nox kernel shell."""
+    """Show workspace storage details."""
+    print_banner()
+    print_storage_info(load_cli_context(path))
+
+
+@storage_app.command("backup")
+def storage_backup(
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to back up."),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        "-o",
+        help="Directory for the backup file. Defaults to .nox/backups.",
+    ),
+) -> None:
+    """Back up the current workspace event log."""
     print_banner()
     context = load_cli_context(path)
-    typer.echo("Nox shell. Type 'help' for commands, 'exit' to quit.")
+    try:
+        backup_path = backup_file(context.workspace.event_log_path, output_dir)
+    except StorageError as exc:
+        typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Backup: {backup_path}")
+
+
+@storage_app.command("export-events")
+def storage_export_events(
+    output: Path = typer.Option(..., "--output", "-o", help="JSON export path."),
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to export."),
+) -> None:
+    """Export workspace events as normalized JSON."""
+    print_banner()
+    context = load_cli_context(path)
+    try:
+        export_path = export_events(context.event_store, output)
+    except StorageError as exc:
+        typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Export: {export_path}")
+
+
+@app.command("cli")
+def cli(
+    path: Path | None = typer.Option(None, "--path", "-p", help="Workspace to use."),
+) -> None:
+    """Start an interactive Nox CLI session."""
+    print_banner()
+    context = load_cli_context(path)
+    typer.echo("Nox CLI. Type 'help' for commands, 'exit' to quit.")
 
     while True:
         try:
@@ -580,7 +676,7 @@ def run_shell_command(context: CliKernelContext, parts: list[str]) -> None:
         typer.echo("task create <goal>")
         typer.echo("task show <task_id>")
         typer.echo("task transition <task_id> <status> <reason>")
-        typer.echo("events [task_id]")
+        typer.echo("logs [task_id]")
         typer.echo("policy <task_id> <capability> [target]")
         typer.echo("approvals")
         typer.echo("approve <approval_id> [reason]")
@@ -614,7 +710,7 @@ def run_shell_command(context: CliKernelContext, parts: list[str]) -> None:
         print_task(task)
         return
 
-    if command == "events":
+    if command in {"logs", "events"}:
         events = (
             context.kernel.audit_trail.list_events(task_id=parts[1])
             if len(parts) > 1
@@ -651,7 +747,7 @@ def run_shell_command(context: CliKernelContext, parts: list[str]) -> None:
 
     if command in {"approve", "reject"} and len(parts) >= 2:
         approved = command == "approve"
-        reason = " ".join(parts[2:]) if len(parts) > 2 else f"{command}d in shell"
+        reason = " ".join(parts[2:]) if len(parts) > 2 else f"{command}d in cli"
         approval = context.kernel.resolve_approval(
             parts[1],
             approved=approved,
@@ -670,12 +766,12 @@ def run_shell_command(context: CliKernelContext, parts: list[str]) -> None:
             typer.echo(f"Scope: {snapshot.scope.value}")
             return
         if subcommand == "on":
-            reason = " ".join(parts[2:]) if len(parts) > 2 else "enabled in shell"
+            reason = " ".join(parts[2:]) if len(parts) > 2 else "enabled in cli"
             snapshot = context.kernel.activate_kill_switch(reason=reason, actor="user")
             typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
             return
         if subcommand == "off":
-            reason = " ".join(parts[2:]) if len(parts) > 2 else "disabled in shell"
+            reason = " ".join(parts[2:]) if len(parts) > 2 else "disabled in cli"
             snapshot = context.kernel.deactivate_kill_switch(reason=reason, actor="user")
             typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
             return

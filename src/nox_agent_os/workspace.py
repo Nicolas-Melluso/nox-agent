@@ -125,7 +125,8 @@ engine:
 
 # Nox Workspace System Prompt
 
-This workspace uses the installed Nox engine referenced in the frontmatter.
+This workspace is a local Nox instance that uses the installed Nox engine
+referenced in the frontmatter.
 
 The local `.nox` directory should stay small. It points Nox at this workspace and
 lets the installed engine provide runtime code, policies, adapters, schemas and
@@ -137,13 +138,13 @@ Engine resolution:
 - Treat `engine.install_root_path` as the installed engine root.
 - Use `engine.executable_path` as the command entrypoint that created or updated this workspace.
 - Treat the installed package as the source of runtime code, policies, adapters, schemas and defaults.
-- Treat this `.nox` directory as workspace metadata, not as the engine itself.
+- Treat this `.nox` directory as workspace metadata and local workspace state, not as the engine itself.
 - Treat `.nox/{EVENT_LOG_NAME}` as the workspace event log until a stronger storage adapter is configured.
 
 Workspace rules:
 
 - Treat this directory as the active project workspace.
-- Do not assume tools, models or storage live inside `.nox`.
+- Do not assume runtime tools or models live inside `.nox`.
 - Resolve engine capabilities from the installed Nox package referenced above.
 - Ask for human approval before sensitive, external or irreversible actions.
 """
