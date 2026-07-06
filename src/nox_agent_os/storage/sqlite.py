@@ -29,6 +29,7 @@ def migrate_sqlite_database(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with sqlite3.connect(path) as connection:
+            connection.row_factory = sqlite3.Row
             connection.executescript(
                 """
                 PRAGMA foreign_keys = ON;
@@ -46,6 +47,7 @@ def migrate_sqlite_database(path: Path) -> None:
                     task_id TEXT NOT NULL,
                     session_id TEXT NOT NULL,
                     workspace_id TEXT NOT NULL,
+                    instance_id TEXT,
                     actor TEXT NOT NULL,
                     timestamp TEXT NOT NULL,
                     payload_json TEXT NOT NULL,
@@ -63,6 +65,7 @@ def migrate_sqlite_database(path: Path) -> None:
                     schema_version INTEGER NOT NULL,
                     user_goal TEXT NOT NULL,
                     workspace_id TEXT NOT NULL,
+                    instance_id TEXT,
                     session_id TEXT NOT NULL,
                     trace_id TEXT NOT NULL,
                     status TEXT NOT NULL,
@@ -99,13 +102,16 @@ def migrate_sqlite_database(path: Path) -> None:
                     ON evidence(task_id);
                 """
             )
-            connection.execute(
-                """
-                INSERT OR IGNORE INTO schema_migrations(version, applied_at)
-                VALUES (?, ?)
-                """,
-                (STORAGE_SCHEMA_VERSION, datetime.now(UTC).isoformat()),
-            )
+            _add_column_if_missing(connection, "events", "instance_id", "TEXT")
+            _add_column_if_missing(connection, "tasks", "instance_id", "TEXT")
+            for version in range(1, STORAGE_SCHEMA_VERSION + 1):
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO schema_migrations(version, applied_at)
+                    VALUES (?, ?)
+                    """,
+                    (version, datetime.now(UTC).isoformat()),
+                )
     except sqlite3.Error as exc:
         raise EventStoreError(f"Could not migrate SQLite storage {path}: {exc}") from exc
 
@@ -123,11 +129,11 @@ class SQLiteEventStore:
                     """
                     INSERT INTO events (
                         event_id, event_type, schema_version, trace_id, task_id,
-                        session_id, workspace_id, actor, timestamp, payload_json,
+                        session_id, workspace_id, instance_id, actor, timestamp, payload_json,
                         previous_event_id, source_module, risk_level,
                         decision_record_id
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         data["event_id"],
@@ -137,6 +143,7 @@ class SQLiteEventStore:
                         data["task_id"],
                         data["session_id"],
                         data["workspace_id"],
+                        data["instance_id"],
                         data["actor"],
                         data["timestamp"],
                         json.dumps(data["payload"], sort_keys=True),
@@ -204,6 +211,7 @@ class SQLiteEventStore:
                 "task_id": row["task_id"],
                 "session_id": row["session_id"],
                 "workspace_id": row["workspace_id"],
+                "instance_id": row["instance_id"],
                 "actor": row["actor"],
                 "timestamp": row["timestamp"],
                 "payload": json.loads(row["payload_json"]),
@@ -227,16 +235,17 @@ class SQLiteTaskStore:
                 connection.execute(
                     """
                     INSERT INTO tasks (
-                        task_id, schema_version, user_goal, workspace_id,
+                        task_id, schema_version, user_goal, workspace_id, instance_id,
                         session_id, trace_id, status, agent_status, run_mode,
                         recovery_state, termination_reason, current_state_json,
                         updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(task_id) DO UPDATE SET
                         schema_version = excluded.schema_version,
                         user_goal = excluded.user_goal,
                         workspace_id = excluded.workspace_id,
+                        instance_id = excluded.instance_id,
                         session_id = excluded.session_id,
                         trace_id = excluded.trace_id,
                         status = excluded.status,
@@ -252,6 +261,7 @@ class SQLiteTaskStore:
                         STORAGE_SCHEMA_VERSION,
                         data["user_goal"],
                         data["workspace_id"],
+                        data["instance_id"],
                         data["session_id"],
                         data["trace_id"],
                         data["status"],
@@ -444,12 +454,27 @@ def _connect(path: Path) -> sqlite3.Connection:
     return connection
 
 
+def _add_column_if_missing(
+    connection: sqlite3.Connection,
+    table: str,
+    column: str,
+    column_type: str,
+) -> None:
+    columns = {
+        str(row["name"])
+        for row in connection.execute(f"PRAGMA table_info({table})").fetchall()
+    }
+    if column not in columns:
+        connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}")
+
+
 def _task_from_row(row: sqlite3.Row) -> TaskState:
     return task_from_record(
         {
             "task_id": row["task_id"],
             "user_goal": row["user_goal"],
             "workspace_id": row["workspace_id"],
+            "instance_id": row["instance_id"],
             "session_id": row["session_id"],
             "trace_id": row["trace_id"],
             "status": row["status"],

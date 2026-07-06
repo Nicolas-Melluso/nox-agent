@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class EventType(StrEnum):
@@ -116,6 +116,7 @@ class EventRecord:
     session_id: str
     workspace_id: str
     actor: str
+    instance_id: str | None = None
     payload: dict[str, Any] = field(default_factory=dict)
     source_module: str = "kernel"
     risk_level: str | None = None
@@ -134,6 +135,7 @@ class TaskState:
     session_id: str
     trace_id: str
     status: TaskStatus
+    instance_id: str | None = None
     agent_status: AgentStatus = AgentStatus.IDLE
     run_mode: RunMode = RunMode.PLAN
     recovery_state: RecoveryState | None = None

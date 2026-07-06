@@ -40,7 +40,7 @@ Los registros que deben auditarse, reproducirse o migrarse deben vivir como dato
 
 | Tipo de dato | Formato inicial | Fuente canonica | Notas |
 | --- | --- | --- | --- |
-| Identidad de workspace | JSON | `.nox/identity.json` futuro | Debe contener `workspace_id`, `instance_id`, version y referencias al engine. |
+| Identidad de workspace | JSON | `.nox/identity.json` | Contiene `workspace_id`, `instance_id`, version y referencias al engine. |
 | Workspace prompt | Markdown + frontmatter | `.nox/system.prompt.md` | Primer punto local creado por `nox init`. |
 | Config humana futura | YAML | `.nox/config.yaml` futuro | Editable por usuario cuando exista configuracion expandida. |
 | Defaults de producto | TOML/JSON futuro | paquete instalado | No se editan a mano. |

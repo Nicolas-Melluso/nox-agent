@@ -166,6 +166,21 @@ Pendiente para fases posteriores:
 - Hacer que `nox doctor` muestre `workspace_id` e `instance_id`.
 - Hacer que eventos/logs futuros puedan incluir ambas identidades sin depender solo del path local.
 
+Estado actual:
+
+- `.nox/identity.json` se crea en `nox init` y se repara automaticamente si falta al cargar un workspace existente.
+- `nox update` refresca version, engine y paths actuales sin cambiar `workspace_id` ni `instance_id`.
+- `nox doctor`, `nox status`, `nox storage info`, `nox logs` y API local exponen identidad.
+- Tareas nuevas usan `workspace_id` estable en vez del path del proyecto.
+- Eventos nuevos pueden persistir `instance_id`; JSONL mantiene compatibilidad con eventos previos sin ese campo.
+- SQLite sube storage schema a version 2 para agregar `instance_id` en eventos y tareas.
+
+Pendiente para fases posteriores:
+
+- Sincronizacion remota o multi-device de identidades.
+- Politicas de rotacion/reemision de `instance_id`.
+- Memoria semantica asociada a identidad.
+
 ## v0.7 - Model Router Sin Modelo Real
 
 - Crear `ModelBackend`.

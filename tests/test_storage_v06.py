@@ -48,7 +48,11 @@ def test_event_store_contract_replays_kernel_events(
     store = store_factory(tmp_path)
     first_kernel = AgentKernel(event_store=store)
 
-    created = first_kernel.create_task("persist through adapter", workspace_id="workspace-a")
+    created = first_kernel.create_task(
+        "persist through adapter",
+        workspace_id="workspace-a",
+        instance_id="instance-a",
+    )
     first_kernel.transition_task(created.task_id, TaskStatus.RUNNING, reason="start")
 
     second_kernel = AgentKernel(event_store=store)
@@ -57,6 +61,7 @@ def test_event_store_contract_replays_kernel_events(
 
     assert replayed.status == TaskStatus.RUNNING
     assert replayed.workspace_id == "workspace-a"
+    assert replayed.instance_id == "instance-a"
     assert [event.event_type for event in events] == [
         EventType.TASK_CREATED,
         EventType.TASK_STATUS_CHANGED,
@@ -98,7 +103,11 @@ def test_task_config_and_evidence_store_contracts(
     stores_factory: Callable[[Path], tuple[object, object, object]],
 ) -> None:
     task_store, config_store, evidence_store = stores_factory(tmp_path)
-    task = AgentKernel().create_task("store task snapshot", workspace_id="workspace-a")
+    task = AgentKernel().create_task(
+        "store task snapshot",
+        workspace_id="workspace-a",
+        instance_id="instance-a",
+    )
 
     task_store.upsert(task)
     config_store.set("workspace", "storage_backend", "jsonl")
@@ -124,7 +133,7 @@ def test_sqlite_storage_records_schema_migration(tmp_path: Path) -> None:
 
     SQLiteEventStore(db_path)
 
-    assert sqlite_schema_versions(db_path) == [1]
+    assert sqlite_schema_versions(db_path) == [1, 2]
 
 
 def test_event_export_and_file_backup(tmp_path: Path) -> None:

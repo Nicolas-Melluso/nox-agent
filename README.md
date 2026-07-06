@@ -6,9 +6,9 @@ Este proyecto no empieza como un chatbot. Empieza como un agente modular local: 
 
 ## Estado
 
-Version actual de trabajo: `v0.6 - Persistencia modular inicial`.
+Version actual de trabajo: `v0.6.1 - Identidad de instancia`.
 
-Ya existe CLI instalable, scaffolding de workspace, kernel event-sourced, gobierno inicial, observabilidad minima, event log JSONL por workspace, API HTTP local y adapters de persistencia `InMemory`, `JSONL` y `SQLite`. Todavia no hay Tool Runtime, modelo local ni memoria semantica.
+Ya existe CLI instalable, scaffolding de workspace, identidad estable para `.nox`, kernel event-sourced, gobierno inicial, observabilidad minima, event log JSONL por workspace, API HTTP local y adapters de persistencia `InMemory`, `JSONL` y `SQLite`. Todavia no hay Tool Runtime, modelo local ni memoria semantica.
 
 ## Modelo de instalacion
 
@@ -23,12 +23,13 @@ Nox instalado
 Proyecto del usuario
   -> .nox/
      -> system.prompt.md
+     -> identity.json
      -> events.jsonl
      -> estado/config/evidencia del workspace
      -> referencias al engine instalado
 ```
 
-La instancia `.nox` debe tener identidad propia. El objetivo es registrar `workspace_id` e `instance_id` para que logs, auditoria, observabilidad, backups y futuras memorias puedan correlacionar eventos sin depender solo del path local.
+La instancia `.nox` tiene identidad propia en `.nox/identity.json`. Registra `workspace_id` e `instance_id` para que logs, auditoria, observabilidad, backups y futuras memorias puedan correlacionar eventos sin depender solo del path local.
 
 ## Artefactos base
 
@@ -101,6 +102,7 @@ nox storage export-events --output events.json
 - Consultar audit trail inicial desde eventos en memoria.
 - Consultar snapshot operativo con `ResourceMonitor`.
 - Persistir eventos del workspace en `.nox/events.jsonl`.
+- Correlacionar eventos nuevos con `workspace_id` estable e `instance_id`.
 - Usar puertos de storage para eventos, tareas, config y evidencia.
 - Probar persistencia via adapters `InMemory`, `JSONL` y `SQLite`.
 - Operar el kernel desde comandos CLI reales.

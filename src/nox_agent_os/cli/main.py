@@ -110,9 +110,12 @@ def print_event(event: EventRecord) -> None:
     decision = (
         f" decision={event.decision_record_id}" if event.decision_record_id else ""
     )
+    instance = f" instance={event.instance_id}" if event.instance_id else ""
     typer.echo(
         f"{event.timestamp.isoformat()} "
-        f"{event.event_type.value} task={event.task_id} actor={event.actor}"
+        f"{event.event_type.value} workspace={event.workspace_id} "
+        f"task={event.task_id} actor={event.actor}"
+        f"{instance}"
         f"{risk}{decision}"
     )
 
@@ -120,6 +123,8 @@ def print_event(event: EventRecord) -> None:
 def print_snapshot(context: CliKernelContext) -> None:
     snapshot = context.kernel.resource_snapshot()
     typer.echo(f"Workspace: {context.workspace.workspace_dir.parent}")
+    typer.echo(f"Workspace ID: {context.workspace.workspace_id}")
+    typer.echo(f"Instance ID: {context.workspace.instance_id}")
     typer.echo(f"Event log: {context.workspace.event_log_path}")
     typer.echo(f"Health: {snapshot.health}")
     typer.echo(f"Tasks: {snapshot.total_tasks}")
@@ -137,6 +142,8 @@ def print_storage_info(context: CliKernelContext) -> None:
     events = context.event_store.list_all()
     typer.echo("Storage backend: jsonl")
     typer.echo(f"Workspace: {context.workspace.workspace_dir.parent}")
+    typer.echo(f"Workspace ID: {context.workspace.workspace_id}")
+    typer.echo(f"Instance ID: {context.workspace.instance_id}")
     typer.echo(f"Event log: {context.workspace.event_log_path}")
     typer.echo(f"Events: {len(events)}")
     typer.echo("SQLite adapter: available")
@@ -173,10 +180,12 @@ def init(
     if result.created:
         typer.echo(f"Initialized Nox workspace: {result.workspace_dir}")
         typer.echo(f"Created: {result.system_prompt_path}")
+        typer.echo(f"Created: {result.identity_path}")
         return
 
     typer.echo(f"Nox workspace already exists: {result.workspace_dir}")
     typer.echo(f"System prompt: {result.system_prompt_path}")
+    typer.echo(f"Identity: {result.identity_path}")
 
 
 @app.command()
@@ -193,6 +202,7 @@ def update(path: Path | None = typer.Argument(None, help="Workspace directory to
 
     typer.echo(f"Updated Nox workspace: {result.workspace_dir}")
     typer.echo(f"System prompt: {result.system_prompt_path}")
+    typer.echo(f"Identity: {result.identity_path}")
 
 
 @app.command()
@@ -238,7 +248,11 @@ def doctor(path: Path | None = typer.Argument(None, help="Workspace directory to
     print_banner()
     target_path = Path.cwd() if path is None else path
     root = target_path.resolve()
-    workspace = find_workspace(root)
+    try:
+        workspace = find_workspace(root)
+    except WorkspaceError as exc:
+        typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
     engine = get_engine_reference()
 
     checks = [
@@ -267,6 +281,10 @@ def doctor(path: Path | None = typer.Argument(None, help="Workspace directory to
         raise typer.Exit(code=1)
 
     typer.echo(f"[ok] workspace: {workspace.workspace_dir}")
+    typer.echo(f"[ok] identity: {workspace.identity_path}")
+    typer.echo(f"[ok] workspace_id: {workspace.workspace_id}")
+    typer.echo(f"[ok] instance_id: {workspace.instance_id}")
+    typer.echo(f"[ok] identity updated_at: {workspace.identity.updated_at}")
     typer.echo(f"[ok] system prompt: {workspace.system_prompt_path}")
     typer.echo(f"[ok] event log: {workspace.event_log_path}")
 
@@ -297,7 +315,8 @@ def task_create(
     try:
         task = context.kernel.create_task(
             goal,
-            workspace_id=str(context.workspace.workspace_dir.parent.resolve()),
+            workspace_id=context.workspace.workspace_id,
+            instance_id=context.workspace.instance_id,
         )
     except KernelControlBlockedError as exc:
         typer.secho(f"[error] {exc}", fg=typer.colors.RED, err=True)
@@ -508,10 +527,13 @@ def kill_on(
 ) -> None:
     """Activate the kill switch."""
     print_banner()
-    snapshot = load_cli_context(path).kernel.activate_kill_switch(
+    context = load_cli_context(path)
+    snapshot = context.kernel.activate_kill_switch(
         reason=reason,
         actor="user",
         scope=scope,
+        workspace_id=context.workspace.workspace_id,
+        instance_id=context.workspace.instance_id,
     )
     typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
     typer.echo(f"Scope: {snapshot.scope.value}")
@@ -524,9 +546,12 @@ def kill_off(
 ) -> None:
     """Deactivate the kill switch."""
     print_banner()
-    snapshot = load_cli_context(path).kernel.deactivate_kill_switch(
+    context = load_cli_context(path)
+    snapshot = context.kernel.deactivate_kill_switch(
         reason=reason,
         actor="user",
+        workspace_id=context.workspace.workspace_id,
+        instance_id=context.workspace.instance_id,
     )
     typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
     typer.echo(f"Scope: {snapshot.scope.value}")
@@ -691,7 +716,8 @@ def run_shell_command(context: CliKernelContext, parts: list[str]) -> None:
     if command == "task" and len(parts) >= 3 and parts[1] == "create":
         task = context.kernel.create_task(
             " ".join(parts[2:]),
-            workspace_id=str(context.workspace.workspace_dir.parent.resolve()),
+            workspace_id=context.workspace.workspace_id,
+            instance_id=context.workspace.instance_id,
         )
         print_task(task)
         return
@@ -767,12 +793,22 @@ def run_shell_command(context: CliKernelContext, parts: list[str]) -> None:
             return
         if subcommand == "on":
             reason = " ".join(parts[2:]) if len(parts) > 2 else "enabled in cli"
-            snapshot = context.kernel.activate_kill_switch(reason=reason, actor="user")
+            snapshot = context.kernel.activate_kill_switch(
+                reason=reason,
+                actor="user",
+                workspace_id=context.workspace.workspace_id,
+                instance_id=context.workspace.instance_id,
+            )
             typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
             return
         if subcommand == "off":
             reason = " ".join(parts[2:]) if len(parts) > 2 else "disabled in cli"
-            snapshot = context.kernel.deactivate_kill_switch(reason=reason, actor="user")
+            snapshot = context.kernel.deactivate_kill_switch(
+                reason=reason,
+                actor="user",
+                workspace_id=context.workspace.workspace_id,
+                instance_id=context.workspace.instance_id,
+            )
             typer.echo(f"Kill switch: {'active' if snapshot.active else 'inactive'}")
             return
 

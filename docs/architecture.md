@@ -58,14 +58,14 @@ Proyecto/.nox
   -> referencias al engine instalado
 ```
 
-La instancia del workspace debe tener identidad propia:
+Desde v0.6.1, la instancia del workspace tiene identidad propia en `.nox/identity.json`:
 
 ```text
 workspace_id -> identidad estable del proyecto
 instance_id  -> identidad de esta carpeta .nox concreta
 ```
 
-Estas identidades deben aparecer en logs, eventos, auditoria, backups, storage y observabilidad.
+Estas identidades aparecen en `doctor`, `status`, API local, logs de eventos nuevos y respuestas de tareas. Esto evita usar el path local como identidad canonica del workspace.
 
 ## Alineacion con stack agentico
 

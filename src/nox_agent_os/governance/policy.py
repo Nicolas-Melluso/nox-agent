@@ -86,6 +86,7 @@ class DefaultPolicyEngine:
             task_id=request.task_id,
             trace_id=request.trace_id,
             workspace_id=request.workspace_id,
+            instance_id=request.instance_id,
             session_id=request.session_id,
             actor=request.actor,
             requires_approval=rule.requires_approval,

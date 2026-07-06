@@ -8,7 +8,7 @@ Nox se instala una vez a nivel usuario o sistema. Esa instalacion es el agente m
 
 Cada workspace solo necesita una carpeta local `.nox` con el system prompt y metadata minima. Esa carpeta es una instancia del workspace, no una copia del agente completo.
 
-La instancia `.nox` debe evolucionar hacia una identidad propia con `workspace_id` e `instance_id`, para que auditoria, observabilidad, backups y memoria futura puedan correlacionarse aunque cambien paths o versiones del engine.
+La instancia `.nox` tiene identidad propia con `workspace_id` e `instance_id`, para que auditoria, observabilidad, backups y memoria futura puedan correlacionarse aunque cambien paths o versiones del engine.
 
 ## Nombres canonicos
 
@@ -59,7 +59,9 @@ uv run nox doctor
 
 ```text
 .nox/
+  identity.json
   system.prompt.md
+  events.jsonl
 ```
 
 El workspace no contiene el sistema completo. Solo declara como debe conectarse ese proyecto local con el engine instalado.
@@ -84,7 +86,7 @@ Si el engine cambia despues de haber creado un workspace, no hace falta desinsta
 nox update
 ```
 
-Eso refresca `.nox/system.prompt.md` con la referencia actual del engine instalado.
+Eso refresca `.nox/system.prompt.md` y la metadata de engine en `.nox/identity.json`, preservando `workspace_id` e `instance_id`.
 
 `nox update` no instala una version nueva de Nox. Solo actualiza metadata local del workspace.
 

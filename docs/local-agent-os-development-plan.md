@@ -41,7 +41,7 @@ Identidad refinada:
 - La metafora de kernel/OS se conserva solo como arquitectura interna.
 - La instalacion general de Nox contiene engine, runtime, policies, adapters, schemas y defaults.
 - Cada `.nox` es una instancia de workspace, no una copia del agente completo.
-- Cada instancia `.nox` debe tener `workspace_id` e `instance_id` propios para logs, auditoria, observabilidad, backups y memoria futura.
+- Cada instancia `.nox` tiene `workspace_id` e `instance_id` propios para logs, auditoria, observabilidad, backups y memoria futura.
 - El roadmap debe seguir contemplando las capas de una pila agentica: modelos, runtime, protocolos, orquestacion, herramientas, superficies, observabilidad y gobernanza.
 
 ## 2. Principios no negociables

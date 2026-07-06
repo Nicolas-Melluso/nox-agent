@@ -77,6 +77,18 @@ Cubren:
 - comandos `nox storage info`, `nox storage backup` y `nox storage export-events`.
 - comando `nox upgrade --check` como verificacion no destructiva del engine instalado.
 
+## v0.6.1
+
+Los tests de identidad viven principalmente en `tests/test_cli_smoke.py`, `tests/test_cli_v04.py`, `tests/test_api_v05.py` y `tests/test_storage_v06.py`.
+
+Cubren:
+
+- creacion de `.nox/identity.json`,
+- preservacion de `workspace_id` e `instance_id` durante `nox update`,
+- uso de `workspace_id` estable en tareas y logs,
+- exposicion de identidad desde API local,
+- migracion SQLite de storage schema `1 -> 2` para `instance_id`.
+
 ## Comandos futuros posibles
 
 ```text

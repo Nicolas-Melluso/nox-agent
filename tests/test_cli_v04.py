@@ -1,3 +1,5 @@
+import json
+
 from typer.testing import CliRunner
 
 from nox_agent_os.cli.main import app
@@ -28,6 +30,7 @@ def test_init_creates_workspace_event_log(tmp_path) -> None:
 
 def test_task_create_and_show_persist_between_cli_invocations(tmp_path) -> None:
     runner.invoke(app, ["init", str(tmp_path)])
+    identity = json.loads((tmp_path / ".nox" / "identity.json").read_text(encoding="utf-8"))
 
     created = runner.invoke(app, ["task", "create", "build cli", "--path", str(tmp_path)])
     task_id = _task_id(created.output)
@@ -38,6 +41,9 @@ def test_task_create_and_show_persist_between_cli_invocations(tmp_path) -> None:
     assert shown.exit_code == 0
     assert events.exit_code == 0
     assert "Goal: build cli" in shown.output
+    assert f"Workspace: {identity['workspace_id']}" in shown.output
+    assert f"workspace={identity['workspace_id']}" in events.output
+    assert f"instance={identity['instance_id']}" in events.output
     assert "task_created" in events.output
 
 

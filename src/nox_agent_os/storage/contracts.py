@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from nox_agent_os.kernel.contracts import EventRecord, TaskState
 
-STORAGE_SCHEMA_VERSION = 1
+STORAGE_SCHEMA_VERSION = 2
 
 
 class StorageError(RuntimeError):

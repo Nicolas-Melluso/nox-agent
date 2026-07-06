@@ -65,6 +65,7 @@ def _restore_pending_approvals(
                 task_id=event.task_id,
                 trace_id=event.trace_id,
                 workspace_id=event.workspace_id,
+                instance_id=event.instance_id,
                 session_id=event.session_id,
                 actor=event.actor,
                 reason=str(event.payload.get("reason") or ""),

@@ -4,16 +4,22 @@ from nox_agent_os.kernel import AgentKernel, EventType, InMemoryEventStore, Task
 def test_create_task_emits_event_contract() -> None:
     kernel = AgentKernel()
 
-    task = kernel.create_task("build the kernel", workspace_id="workspace-a")
+    task = kernel.create_task(
+        "build the kernel",
+        workspace_id="workspace-a",
+        instance_id="instance-a",
+    )
     events = kernel.event_store.list_for_task(task.task_id)
 
     assert task.status == TaskStatus.CREATED
     assert task.trace_id
     assert len(events) == 1
     assert events[0].event_type == EventType.TASK_CREATED
-    assert events[0].schema_version == 1
+    assert events[0].schema_version == 2
     assert events[0].trace_id == task.trace_id
     assert events[0].workspace_id == "workspace-a"
+    assert events[0].instance_id == "instance-a"
+    assert task.instance_id == "instance-a"
 
 
 def test_replay_reconstructs_task_state() -> None:
