@@ -24,10 +24,12 @@ README, roadmap, stack y plan maestro pueden resumir decisiones, pero no reempla
 | `0014` | Observabilidad minima desde el kernel | Aceptado |
 | `0015` | CLI real y event log JSONL minimo | Aceptado |
 | `0016` | API local como adaptador HTTP | Aceptado |
+| `0017` | Persistencia modular inicial | Aceptado |
+| `0018` | Identidad de instancia de workspace | Aceptado |
 
 ## Proxima numeracion
 
-El proximo ADR nuevo debe usar `0017`.
+El proximo ADR nuevo debe usar `0019`.
 
 ## Regla de numeracion
 
@@ -35,6 +37,6 @@ Los ADRs no se renombran una vez aceptados. Si una decision cambia, se crea un A
 
 ## ADRs previstos
 
-- `0017`: Evidence Ledger.
-- `0018`: State Machine Kernel ampliado, si requiere decision formal adicional.
-- `0019`: tests/evals por etapas, si requiere decision formal adicional.
+- `0019`: Evidence Ledger.
+- `0020`: State Machine Kernel ampliado, si requiere decision formal adicional.
+- `0021`: tests/evals por etapas, si requiere decision formal adicional.

@@ -1,23 +1,46 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from os import makedirs
 from pathlib import Path
+from typing import Any
+from uuid import uuid4
 
 import nox_agent_os
 from nox_agent_os import __version__
+from nox_agent_os.modeling import ModelConfigError, ensure_model_config
 
 WORKSPACE_DIR_NAME = ".nox"
 SYSTEM_PROMPT_NAME = "system.prompt.md"
 EVENT_LOG_NAME = "events.jsonl"
+IDENTITY_NAME = "identity.json"
+MODEL_CONFIG_NAME = "model.config.json"
+IDENTITY_SCHEMA_VERSION = 1
+
+
+@dataclass(frozen=True)
+class WorkspaceIdentity:
+    workspace_id: str
+    instance_id: str
+    created_at: str
+    updated_at: str
+    nox_version: str
+    last_known_workspace_root_path: Path
+    engine: "EngineReference"
+    schema_version: int = IDENTITY_SCHEMA_VERSION
 
 
 @dataclass(frozen=True)
 class WorkspaceInitResult:
     workspace_dir: Path
     system_prompt_path: Path
+    identity_path: Path
+    model_config_path: Path
+    identity: WorkspaceIdentity
     created: bool
 
 
@@ -25,10 +48,25 @@ class WorkspaceInitResult:
 class Workspace:
     workspace_dir: Path
     system_prompt_path: Path
+    identity_path: Path
+    model_config_path: Path
+    identity: WorkspaceIdentity
 
     @property
     def event_log_path(self) -> Path:
         return self.workspace_dir / EVENT_LOG_NAME
+
+    @property
+    def workspace_root_path(self) -> Path:
+        return self.workspace_dir.parent
+
+    @property
+    def workspace_id(self) -> str:
+        return self.identity.workspace_id
+
+    @property
+    def instance_id(self) -> str:
+        return self.identity.instance_id
 
 
 class WorkspaceError(RuntimeError):
@@ -65,6 +103,123 @@ def get_engine_reference() -> EngineReference:
 
 def _frontmatter_string(value: object) -> str:
     return "'" + str(value).replace("'", "''") + "'"
+
+
+def _utc_now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _new_id(prefix: str) -> str:
+    return f"{prefix}_{uuid4().hex}"
+
+
+def _engine_to_dict(engine: EngineReference) -> dict[str, str]:
+    return {
+        "mode": engine.mode,
+        "package": engine.package,
+        "import_name": engine.import_name,
+        "version": engine.version,
+        "install_root_path": str(engine.install_root_path),
+        "package_path": str(engine.package_path),
+        "executable_path": str(engine.executable_path),
+    }
+
+
+def _engine_from_dict(data: dict[str, Any]) -> EngineReference:
+    return EngineReference(
+        mode=str(data["mode"]),
+        package=str(data["package"]),
+        import_name=str(data["import_name"]),
+        version=str(data["version"]),
+        install_root_path=Path(str(data["install_root_path"])),
+        package_path=Path(str(data["package_path"])),
+        executable_path=Path(str(data["executable_path"])),
+    )
+
+
+def _identity_to_dict(identity: WorkspaceIdentity) -> dict[str, Any]:
+    return {
+        "schema_version": identity.schema_version,
+        "workspace_id": identity.workspace_id,
+        "instance_id": identity.instance_id,
+        "created_at": identity.created_at,
+        "updated_at": identity.updated_at,
+        "nox_version": identity.nox_version,
+        "last_known_workspace_root_path": str(identity.last_known_workspace_root_path),
+        "engine": _engine_to_dict(identity.engine),
+    }
+
+
+def _identity_from_dict(data: dict[str, Any]) -> WorkspaceIdentity:
+    return WorkspaceIdentity(
+        schema_version=int(data.get("schema_version") or IDENTITY_SCHEMA_VERSION),
+        workspace_id=str(data["workspace_id"]),
+        instance_id=str(data["instance_id"]),
+        created_at=str(data["created_at"]),
+        updated_at=str(data["updated_at"]),
+        nox_version=str(data["nox_version"]),
+        last_known_workspace_root_path=Path(str(data["last_known_workspace_root_path"])),
+        engine=_engine_from_dict(dict(data["engine"])),
+    )
+
+
+def _read_identity(path: Path) -> WorkspaceIdentity:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise TypeError("identity must be a JSON object")
+        return _identity_from_dict(data)
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise WorkspaceError(f"Invalid workspace identity: {path}. {exc}") from exc
+
+
+def _write_identity(path: Path, identity: WorkspaceIdentity) -> None:
+    try:
+        path.write_text(
+            json.dumps(_identity_to_dict(identity), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise WorkspaceError(f"Could not write workspace identity: {path}. {exc}") from exc
+
+
+def ensure_workspace_identity(
+    workspace_dir: Path,
+    workspace_root_path: Path,
+    *,
+    refresh: bool = False,
+) -> WorkspaceIdentity:
+    identity_path = workspace_dir / IDENTITY_NAME
+    now = _utc_now()
+
+    if identity_path.exists():
+        current = _read_identity(identity_path)
+        if not refresh:
+            return current
+        identity = WorkspaceIdentity(
+            schema_version=IDENTITY_SCHEMA_VERSION,
+            workspace_id=current.workspace_id,
+            instance_id=current.instance_id,
+            created_at=current.created_at,
+            updated_at=now,
+            nox_version=__version__,
+            last_known_workspace_root_path=workspace_root_path.resolve(strict=False),
+            engine=get_engine_reference(),
+        )
+        _write_identity(identity_path, identity)
+        return identity
+
+    identity = WorkspaceIdentity(
+        workspace_id=_new_id("ws"),
+        instance_id=_new_id("inst"),
+        created_at=now,
+        updated_at=now,
+        nox_version=__version__,
+        last_known_workspace_root_path=workspace_root_path.resolve(strict=False),
+        engine=get_engine_reference(),
+    )
+    _write_identity(identity_path, identity)
+    return identity
 
 
 def _ensure_directory(path: Path, label: str) -> None:
@@ -125,7 +280,11 @@ engine:
 
 # Nox Workspace System Prompt
 
-This workspace uses the installed Nox engine referenced in the frontmatter.
+This workspace is a local Nox instance that uses the installed Nox engine
+referenced in the frontmatter.
+
+Workspace identity lives in `.nox/{IDENTITY_NAME}`. Use `workspace_id` for stable
+project-level correlation and `instance_id` for this concrete `.nox` instance.
 
 The local `.nox` directory should stay small. It points Nox at this workspace and
 lets the installed engine provide runtime code, policies, adapters, schemas and
@@ -137,13 +296,14 @@ Engine resolution:
 - Treat `engine.install_root_path` as the installed engine root.
 - Use `engine.executable_path` as the command entrypoint that created or updated this workspace.
 - Treat the installed package as the source of runtime code, policies, adapters, schemas and defaults.
-- Treat this `.nox` directory as workspace metadata, not as the engine itself.
+- Treat this `.nox` directory as workspace metadata and local workspace state, not as the engine itself.
 - Treat `.nox/{EVENT_LOG_NAME}` as the workspace event log until a stronger storage adapter is configured.
+- Treat `.nox/{MODEL_CONFIG_NAME}` as workspace model routing config: default model, token limits and audit level.
 
 Workspace rules:
 
 - Treat this directory as the active project workspace.
-- Do not assume tools, models or storage live inside `.nox`.
+- Do not assume runtime tools or models live inside `.nox`.
 - Resolve engine capabilities from the installed Nox package referenced above.
 - Ask for human approval before sensitive, external or irreversible actions.
 """
@@ -158,6 +318,17 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
     _ensure_directory(root, "workspace directory")
     _check_writable_directory(root)
     _ensure_directory(workspace_dir, "Nox workspace directory")
+    identity = ensure_workspace_identity(
+        workspace_dir,
+        root,
+        refresh=force or not system_prompt_path.exists(),
+    )
+    identity_path = workspace_dir / IDENTITY_NAME
+    model_config_path = workspace_dir / MODEL_CONFIG_NAME
+    try:
+        ensure_model_config(model_config_path)
+    except ModelConfigError as exc:
+        raise WorkspaceError(str(exc)) from exc
     event_log_path = workspace_dir / EVENT_LOG_NAME
     if not event_log_path.exists():
         try:
@@ -169,6 +340,9 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
         return WorkspaceInitResult(
             workspace_dir=workspace_dir,
             system_prompt_path=system_prompt_path,
+            identity_path=identity_path,
+            model_config_path=model_config_path,
+            identity=identity,
             created=False,
         )
 
@@ -180,6 +354,9 @@ def create_workspace(path: Path, force: bool = False) -> WorkspaceInitResult:
     return WorkspaceInitResult(
         workspace_dir=workspace_dir,
         system_prompt_path=system_prompt_path,
+        identity_path=identity_path,
+        model_config_path=model_config_path,
+        identity=identity,
         created=True,
     )
 
@@ -196,6 +373,13 @@ def update_workspace(path: Path) -> WorkspaceInitResult:
     if not system_prompt_path.exists():
         return create_workspace(root, force=True)
 
+    identity = ensure_workspace_identity(workspace_dir, root, refresh=True)
+    model_config_path = workspace_dir / MODEL_CONFIG_NAME
+    try:
+        ensure_model_config(model_config_path)
+    except ModelConfigError as exc:
+        raise WorkspaceError(str(exc)) from exc
+
     try:
         system_prompt_path.write_text(render_system_prompt(), encoding="utf-8")
     except OSError as exc:
@@ -204,6 +388,9 @@ def update_workspace(path: Path) -> WorkspaceInitResult:
     return WorkspaceInitResult(
         workspace_dir=workspace_dir,
         system_prompt_path=system_prompt_path,
+        identity_path=workspace_dir / IDENTITY_NAME,
+        model_config_path=model_config_path,
+        identity=identity,
         created=False,
     )
 
@@ -215,6 +402,18 @@ def find_workspace(path: Path) -> Workspace | None:
         workspace_dir = candidate / WORKSPACE_DIR_NAME
         system_prompt_path = workspace_dir / SYSTEM_PROMPT_NAME
         if system_prompt_path.exists():
-            return Workspace(workspace_dir=workspace_dir, system_prompt_path=system_prompt_path)
+            identity = ensure_workspace_identity(workspace_dir, candidate)
+            model_config_path = workspace_dir / MODEL_CONFIG_NAME
+            try:
+                ensure_model_config(model_config_path)
+            except ModelConfigError as exc:
+                raise WorkspaceError(str(exc)) from exc
+            return Workspace(
+                workspace_dir=workspace_dir,
+                system_prompt_path=system_prompt_path,
+                identity_path=workspace_dir / IDENTITY_NAME,
+                model_config_path=model_config_path,
+                identity=identity,
+            )
 
     return None

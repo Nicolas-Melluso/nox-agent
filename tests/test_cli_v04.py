@@ -1,3 +1,5 @@
+import json
+
 from typer.testing import CliRunner
 
 from nox_agent_os.cli.main import app
@@ -28,16 +30,20 @@ def test_init_creates_workspace_event_log(tmp_path) -> None:
 
 def test_task_create_and_show_persist_between_cli_invocations(tmp_path) -> None:
     runner.invoke(app, ["init", str(tmp_path)])
+    identity = json.loads((tmp_path / ".nox" / "identity.json").read_text(encoding="utf-8"))
 
     created = runner.invoke(app, ["task", "create", "build cli", "--path", str(tmp_path)])
     task_id = _task_id(created.output)
     shown = runner.invoke(app, ["task", "show", task_id, "--path", str(tmp_path)])
-    events = runner.invoke(app, ["events", "task", task_id, "--path", str(tmp_path)])
+    events = runner.invoke(app, ["logs", "task", task_id, "--path", str(tmp_path)])
 
     assert created.exit_code == 0
     assert shown.exit_code == 0
     assert events.exit_code == 0
     assert "Goal: build cli" in shown.output
+    assert f"Workspace: {identity['workspace_id']}" in shown.output
+    assert f"workspace={identity['workspace_id']}" in events.output
+    assert f"instance={identity['instance_id']}" in events.output
     assert "task_created" in events.output
 
 
@@ -113,16 +119,16 @@ def test_kill_switch_persists_between_cli_invocations(tmp_path) -> None:
     assert "Scope: new_tasks" in status.output
 
 
-def test_shell_runs_basic_kernel_session(tmp_path) -> None:
+def test_cli_runs_basic_kernel_session(tmp_path) -> None:
     runner.invoke(app, ["init", str(tmp_path)])
 
     result = runner.invoke(
         app,
-        ["shell", "--path", str(tmp_path)],
+        ["cli", "--path", str(tmp_path)],
         input="task create shell task\nstatus\nexit\n",
     )
 
     assert result.exit_code == 0
-    assert "Nox shell" in result.output
+    assert "Nox CLI" in result.output
     assert "Goal: shell task" in result.output
     assert "Tasks: 1" in result.output

@@ -1,3 +1,5 @@
+import json
+
 from fastapi.testclient import TestClient
 
 from nox_agent_os.api import create_app
@@ -6,6 +8,7 @@ from nox_agent_os.workspace import create_workspace
 
 def test_health_and_status(tmp_path) -> None:
     create_workspace(tmp_path)
+    identity = json.loads((tmp_path / ".nox" / "identity.json").read_text(encoding="utf-8"))
     client = TestClient(create_app(workspace_path=tmp_path))
 
     health = client.get("/health")
@@ -14,6 +17,8 @@ def test_health_and_status(tmp_path) -> None:
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
     assert status.status_code == 200
+    assert status.json()["workspace_id"] == identity["workspace_id"]
+    assert status.json()["instance_id"] == identity["instance_id"]
     assert status.json()["total_tasks"] == 0
     assert status.json()["kill_switch_active"] is False
 
@@ -23,6 +28,7 @@ def test_task_lifecycle_and_events(tmp_path) -> None:
     client = TestClient(create_app(workspace_path=tmp_path))
 
     created = client.post("/tasks", json={"goal": "build local api"})
+    identity = json.loads((tmp_path / ".nox" / "identity.json").read_text(encoding="utf-8"))
     task_id = created.json()["task_id"]
     listed = client.get("/tasks")
     shown = client.get(f"/tasks/{task_id}")
@@ -39,6 +45,8 @@ def test_task_lifecycle_and_events(tmp_path) -> None:
     assert events.status_code == 200
     assert listed.json()[0]["task_id"] == task_id
     assert shown.json()["user_goal"] == "build local api"
+    assert shown.json()["workspace_id"] == identity["workspace_id"]
+    assert shown.json()["instance_id"] == identity["instance_id"]
     assert transitioned.json()["status"] == "running"
     assert [event["event_type"] for event in events.json()] == [
         "task_created",

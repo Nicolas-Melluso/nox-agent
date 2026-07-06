@@ -22,8 +22,14 @@ defaults
 
 ```text
 .nox/
+  identity.json
+  model.config.json
   system.prompt.md
+  events.jsonl
+  backups/
 ```
+
+`.nox` es la instancia del workspace. La instalacion general de Nox provee runtime, adapters, politicas, schemas y defaults; `.nox` conserva lo local al proyecto.
 
 ## Regla canonica
 
@@ -35,10 +41,14 @@ Los registros que deben auditarse, reproducirse o migrarse deben vivir como dato
 
 | Tipo de dato | Formato inicial | Fuente canonica | Notas |
 | --- | --- | --- | --- |
+| Identidad de workspace | JSON | `.nox/identity.json` | Contiene `workspace_id`, `instance_id`, version y referencias al engine. |
+| Config de modelos | JSON | `.nox/model.config.json` | Contiene modelo default, limites por modelo y nivel de auditoria. |
 | Workspace prompt | Markdown + frontmatter | `.nox/system.prompt.md` | Primer punto local creado por `nox init`. |
 | Config humana futura | YAML | `.nox/config.yaml` futuro | Editable por usuario cuando exista configuracion expandida. |
 | Defaults de producto | TOML/JSON futuro | paquete instalado | No se editan a mano. |
 | Eventos | JSONL o SQLite adapter | `EventStore` | Append-only, con `schema_version`. |
+| Tareas | JSONL o SQLite adapter | `TaskStore` | Snapshot/read model, no reemplaza eventos canonicos. |
+| Config estructurada | JSONL o SQLite adapter | `ConfigStore` | Para datos de sistema, no necesariamente editable a mano. |
 | Logs estructurados | JSONL | log local | Observabilidad, no estado canonico. |
 | Audit trail | JSONL o SQLite adapter | `AuditStore` futuro | Debe poder correlacionarse con eventos. |
 | Evidencia | SQLite o JSONL adapter | `EvidenceStore` | Con provenance, hash y retencion. |

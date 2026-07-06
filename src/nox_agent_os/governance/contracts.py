@@ -67,6 +67,7 @@ class ActionRequest:
     task_id: str
     trace_id: str
     workspace_id: str = "default"
+    instance_id: str | None = None
     session_id: str = "default"
     actor: str = "system"
     target: str | None = None
@@ -85,6 +86,7 @@ class PolicyDecision:
     task_id: str
     trace_id: str
     workspace_id: str
+    instance_id: str | None
     session_id: str
     actor: str
     requires_approval: bool = False
@@ -101,6 +103,7 @@ class ApprovalRequest:
     task_id: str
     trace_id: str
     workspace_id: str
+    instance_id: str | None
     session_id: str
     actor: str
     reason: str

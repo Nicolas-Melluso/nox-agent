@@ -38,11 +38,27 @@ class InMemoryEventStore(EventStore):
     ...
 ```
 
+Desde v0.6, la capa `nox_agent_os.storage` formaliza tambien:
+
+```python
+class TaskStore:
+    ...
+
+class ConfigStore:
+    ...
+
+class EvidenceStore:
+    ...
+```
+
+Los adapters iniciales son `InMemory`, `JSONL` y `SQLite`.
+
 ## Prohibiciones iniciales
 
 - No importar FastAPI dentro del kernel.
 - No importar Typer dentro del kernel.
 - No usar SQLite directamente fuera de su adapter.
+- No guardar memoria, evidencia o config saltando los stores versionados.
 - No llamar modelos directamente desde superficies de usuario.
 - No ejecutar herramientas sin pasar por politica.
 

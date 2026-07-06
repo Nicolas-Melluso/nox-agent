@@ -73,6 +73,8 @@ def create_app(*, workspace_path: Path | None = None) -> FastAPI:
         snapshot = ctx.kernel.resource_snapshot()
         return {
             "workspace": str(ctx.workspace.workspace_dir.parent),
+            "workspace_id": ctx.workspace.workspace_id,
+            "instance_id": ctx.workspace.instance_id,
             "event_log": str(ctx.workspace.event_log_path),
             "health": snapshot.health,
             "total_events": snapshot.total_events,
@@ -94,7 +96,8 @@ def create_app(*, workspace_path: Path | None = None) -> FastAPI:
         try:
             task = ctx.kernel.create_task(
                 request.goal,
-                workspace_id=str(ctx.workspace.workspace_dir.parent.resolve()),
+                workspace_id=ctx.workspace.workspace_id,
+                instance_id=ctx.workspace.instance_id,
                 actor="api",
             )
         except KernelControlBlockedError as exc:
@@ -236,10 +239,13 @@ def create_app(*, workspace_path: Path | None = None) -> FastAPI:
 
     @app.post("/kill/on")
     def activate_kill_switch(request: KillSwitchOnRequest) -> dict[str, Any]:
-        snapshot = context().kernel.activate_kill_switch(
+        ctx = context()
+        snapshot = ctx.kernel.activate_kill_switch(
             reason=request.reason,
             actor="api",
             scope=request.scope,
+            workspace_id=ctx.workspace.workspace_id,
+            instance_id=ctx.workspace.instance_id,
         )
         return {
             "active": snapshot.active,
@@ -253,9 +259,12 @@ def create_app(*, workspace_path: Path | None = None) -> FastAPI:
 
     @app.post("/kill/off")
     def deactivate_kill_switch(request: KillSwitchOffRequest) -> dict[str, Any]:
-        snapshot = context().kernel.deactivate_kill_switch(
+        ctx = context()
+        snapshot = ctx.kernel.deactivate_kill_switch(
             reason=request.reason,
             actor="api",
+            workspace_id=ctx.workspace.workspace_id,
+            instance_id=ctx.workspace.instance_id,
         )
         return {
             "active": snapshot.active,
@@ -275,6 +284,7 @@ def task_to_response(task) -> dict[str, Any]:
         "task_id": task.task_id,
         "user_goal": task.user_goal,
         "workspace_id": task.workspace_id,
+        "instance_id": task.instance_id,
         "session_id": task.session_id,
         "trace_id": task.trace_id,
         "status": task.status.value,
@@ -299,6 +309,7 @@ def event_to_response(event: EventRecord) -> dict[str, Any]:
         "task_id": event.task_id,
         "session_id": event.session_id,
         "workspace_id": event.workspace_id,
+        "instance_id": event.instance_id,
         "actor": event.actor,
         "timestamp": event.timestamp.isoformat(),
         "payload": event.payload,
@@ -319,6 +330,7 @@ def approval_to_response(approval) -> dict[str, Any]:
         "task_id": approval.task_id,
         "trace_id": approval.trace_id,
         "workspace_id": approval.workspace_id,
+        "instance_id": approval.instance_id,
         "session_id": approval.session_id,
         "actor": approval.actor,
         "reason": approval.reason,

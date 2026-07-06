@@ -11,8 +11,11 @@ nox api serve --host 127.0.0.1 --port 8787
 Por defecto usa el workspace actual y su event log:
 
 ```text
+.nox/identity.json
 .nox/events.jsonl
 ```
+
+Desde v0.6.1, `/status`, tareas, eventos y approvals incluyen `workspace_id` e `instance_id` cuando existen en la instancia `.nox`.
 
 ## Endpoints iniciales
 

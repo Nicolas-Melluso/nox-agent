@@ -15,6 +15,8 @@ class AuditSummary:
     kill_switch_events: int
     blocked_events: int
     doom_loop_events: int
+    model_route_events: int
+    model_invocations: int
 
 
 class AuditTrail:
@@ -85,4 +87,6 @@ class AuditTrail:
             + event_types.count(EventType.KILL_SWITCH_BLOCKED),
             blocked_events=len(self.list_blocks()),
             doom_loop_events=event_types.count(EventType.DOOM_LOOP_DETECTED),
+            model_route_events=event_types.count(EventType.MODEL_ROUTE_SELECTED),
+            model_invocations=event_types.count(EventType.MODEL_INVOCATION_COMPLETED),
         )

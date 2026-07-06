@@ -40,6 +40,7 @@ class InMemoryApprovalQueue:
             task_id=action.task_id,
             trace_id=action.trace_id,
             workspace_id=action.workspace_id,
+            instance_id=action.instance_id,
             session_id=action.session_id,
             actor=action.actor,
             reason=decision.reason,

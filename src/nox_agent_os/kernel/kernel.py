@@ -24,6 +24,13 @@ from nox_agent_os.kernel.audit import AuditTrail
 from nox_agent_os.kernel.events import EventBus, EventStore, InMemoryEventStore
 from nox_agent_os.kernel.monitor import KernelResourceSnapshot, ResourceMonitor
 from nox_agent_os.kernel.state import StateMachineKernel
+from nox_agent_os.modeling import (
+    ModelInvocationResult,
+    ModelRequest,
+    ModelRouter,
+    ModelWorkspaceConfig,
+    create_default_model_router,
+)
 
 KERNEL_TASK_ID = "kernel"
 
@@ -46,6 +53,7 @@ class AgentKernel:
         approval_queue: InMemoryApprovalQueue | None = None,
         kill_switch: KillSwitch | None = None,
         doom_loop_guard: DoomLoopGuard | None = None,
+        model_router: ModelRouter | None = None,
     ) -> None:
         self.event_store = event_store or InMemoryEventStore()
         self.event_bus = EventBus(self.event_store)
@@ -54,6 +62,7 @@ class AgentKernel:
         self.approval_queue = approval_queue or InMemoryApprovalQueue()
         self.kill_switch = kill_switch or KillSwitch()
         self.doom_loop_guard = doom_loop_guard or DoomLoopGuard()
+        self.model_router = model_router or create_default_model_router()
         self.audit_trail = AuditTrail(self.event_store)
         self.resource_monitor = ResourceMonitor(
             event_store=self.event_store,
@@ -67,6 +76,7 @@ class AgentKernel:
         user_goal: str,
         *,
         workspace_id: str = "default",
+        instance_id: str | None = None,
         session_id: str | None = None,
         actor: str = "user",
     ) -> TaskState:
@@ -82,6 +92,7 @@ class AgentKernel:
                 workspace_id=workspace_id,
                 actor=actor,
                 operation="create_task",
+                instance_id=instance_id,
             )
             raise KernelControlBlockedError("Kill switch blocks new tasks.")
 
@@ -93,6 +104,7 @@ class AgentKernel:
             workspace_id=workspace_id,
             actor=actor,
             payload={"user_goal": user_goal},
+            instance_id=instance_id,
         )
 
         return self.get_task(task_id)
@@ -114,6 +126,7 @@ class AgentKernel:
             task_id=current.task_id,
             trace_id=current.trace_id,
             workspace_id=current.workspace_id,
+            instance_id=current.instance_id,
             session_id=current.session_id,
             actor=actor,
             target=target,
@@ -128,6 +141,7 @@ class AgentKernel:
                 workspace_id=current.workspace_id,
                 actor=actor,
                 operation=f"capability:{request.capability.value}",
+                instance_id=current.instance_id,
             )
             decision = self._deny_request(
                 request,
@@ -164,6 +178,7 @@ class AgentKernel:
                 },
                 source_module="governance",
                 risk_level=RiskLevel.HIGH.value,
+                instance_id=current.instance_id,
             )
             decision = self._deny_request(
                 request,
@@ -187,6 +202,7 @@ class AgentKernel:
                     source_module="governance",
                     risk_level=RiskLevel.HIGH.value,
                     decision_record_id=decision.decision_record_id,
+                    instance_id=current.instance_id,
                 )
             return GovernedActionResult(
                 request=request,
@@ -219,6 +235,7 @@ class AgentKernel:
                 source_module="governance",
                 risk_level=approval.risk_level.value,
                 decision_record_id=approval.decision_record_id,
+                instance_id=current.instance_id,
             )
 
         return GovernedActionResult(request=request, decision=decision, approval=approval)
@@ -260,6 +277,7 @@ class AgentKernel:
             source_module="governance",
             risk_level=approval.risk_level.value,
             decision_record_id=approval.decision_record_id,
+            instance_id=approval.instance_id,
         )
         return approval
 
@@ -269,13 +287,20 @@ class AgentKernel:
         reason: str,
         actor: str = "user",
         scope: ControlScope | str = ControlScope.ALL,
+        workspace_id: str = "global",
+        instance_id: str | None = None,
     ) -> KillSwitchSnapshot:
         snapshot = self.kill_switch.activate(
             reason=reason,
             actor=actor,
             scope=ControlScope(scope),
         )
-        self._emit_kill_switch_changed(snapshot, actor=actor)
+        self._emit_kill_switch_changed(
+            snapshot,
+            actor=actor,
+            workspace_id=workspace_id,
+            instance_id=instance_id,
+        )
         return snapshot
 
     def deactivate_kill_switch(
@@ -283,13 +308,43 @@ class AgentKernel:
         *,
         reason: str,
         actor: str = "user",
+        workspace_id: str = "global",
+        instance_id: str | None = None,
     ) -> KillSwitchSnapshot:
         snapshot = self.kill_switch.deactivate(actor=actor, reason=reason)
-        self._emit_kill_switch_changed(snapshot, actor=actor)
+        self._emit_kill_switch_changed(
+            snapshot,
+            actor=actor,
+            workspace_id=workspace_id,
+            instance_id=instance_id,
+        )
         return snapshot
 
     def resource_snapshot(self) -> KernelResourceSnapshot:
         return self.resource_monitor.snapshot()
+
+    def route_model(
+        self,
+        prompt: str,
+        *,
+        config: ModelWorkspaceConfig,
+        workspace_id: str = "default",
+        instance_id: str | None = None,
+        model_id: str | None = None,
+        profile: str = "balanced",
+        max_tokens: int | None = None,
+        actor: str = "user",
+    ) -> ModelInvocationResult:
+        request = ModelRequest(
+            prompt=prompt,
+            workspace_id=workspace_id,
+            instance_id=instance_id,
+            model_id=model_id,
+            profile=profile,
+            max_tokens=max_tokens,
+            actor=actor,
+        )
+        return self.model_router.route(request, config, self.event_bus)
 
     def get_task(self, task_id: str) -> TaskState:
         events = self.event_store.list_for_task(task_id)
@@ -320,6 +375,7 @@ class AgentKernel:
                     "to": target_status.value,
                     "reason": reason,
                 },
+                instance_id=current.instance_id,
             )
             return self.get_task(task_id)
 
@@ -335,6 +391,7 @@ class AgentKernel:
                 "to": target_status.value,
                 "reason": reason,
             },
+            instance_id=current.instance_id,
         )
         return self.get_task(task_id)
 
@@ -354,6 +411,7 @@ class AgentKernel:
             task_id=request.task_id,
             trace_id=request.trace_id,
             workspace_id=request.workspace_id,
+            instance_id=request.instance_id,
             session_id=request.session_id,
             actor=request.actor,
         )
@@ -376,6 +434,7 @@ class AgentKernel:
             source_module="governance",
             risk_level=decision.risk_level.value,
             decision_record_id=decision.decision_record_id,
+            instance_id=decision.instance_id,
         )
 
     def _emit_kill_switch_changed(
@@ -383,13 +442,15 @@ class AgentKernel:
         snapshot: KillSwitchSnapshot,
         *,
         actor: str,
+        workspace_id: str,
+        instance_id: str | None,
     ) -> None:
         self.event_bus.emit(
             event_type=EventType.KILL_SWITCH_CHANGED,
             trace_id=str(uuid4()),
             task_id=KERNEL_TASK_ID,
             session_id=str(uuid4()),
-            workspace_id="global",
+            workspace_id=workspace_id,
             actor=actor,
             payload={
                 "active": snapshot.active,
@@ -398,6 +459,7 @@ class AgentKernel:
             },
             source_module="governance",
             risk_level=RiskLevel.CRITICAL.value if snapshot.active else RiskLevel.LOW.value,
+            instance_id=instance_id,
         )
 
     def _emit_kill_switch_blocked(
@@ -409,6 +471,7 @@ class AgentKernel:
         workspace_id: str,
         actor: str,
         operation: str,
+        instance_id: str | None = None,
     ) -> None:
         snapshot = self.kill_switch.snapshot()
         self.event_bus.emit(
@@ -425,6 +488,7 @@ class AgentKernel:
             },
             source_module="governance",
             risk_level=RiskLevel.CRITICAL.value,
+            instance_id=instance_id,
         )
 
     def _normalize_action_input(self, request: ActionRequest) -> str:

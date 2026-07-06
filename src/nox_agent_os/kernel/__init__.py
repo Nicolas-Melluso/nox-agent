@@ -15,6 +15,7 @@ from nox_agent_os.kernel.events import (
     EventStoreError,
     InMemoryEventStore,
     JsonlEventStore,
+    SQLiteEventStore,
 )
 from nox_agent_os.kernel.kernel import AgentKernel, KernelControlBlockedError
 from nox_agent_os.kernel.monitor import KernelResourceSnapshot, ResourceMonitor
@@ -37,6 +38,7 @@ __all__ = [
     "RecoveryState",
     "ResourceMonitor",
     "RunMode",
+    "SQLiteEventStore",
     "StateMachineKernel",
     "TaskState",
     "TaskStatus",

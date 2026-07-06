@@ -49,7 +49,7 @@ Cubren:
 - `nox status`,
 - policy check con approval rehidratable,
 - kill switch persistente entre invocaciones,
-- shell interactivo basico.
+- sesion interactiva basica con `nox cli`.
 
 ## v0.5
 
@@ -62,6 +62,44 @@ Cubren:
 - eventos por tarea,
 - policy check con approval rehidratable,
 - kill switch bloqueando nuevas tareas.
+
+## v0.6
+
+Los tests de persistencia modular viven en `tests/test_storage_v06.py`.
+
+Cubren:
+
+- contrato de `EventStore` en `InMemory`, `JSONL` y `SQLite`,
+- puertos `TaskStore`, `ConfigStore` y `EvidenceStore`,
+- migracion inicial de SQLite,
+- backup del event log,
+- export JSON normalizado de eventos,
+- comandos `nox storage info`, `nox storage backup` y `nox storage export-events`.
+- comando `nox upgrade --check` como verificacion no destructiva del engine instalado.
+
+## v0.6.1
+
+Los tests de identidad viven principalmente en `tests/test_cli_smoke.py`, `tests/test_cli_v04.py`, `tests/test_api_v05.py` y `tests/test_storage_v06.py`.
+
+Cubren:
+
+- creacion de `.nox/identity.json`,
+- preservacion de `workspace_id` e `instance_id` durante `nox update`,
+- uso de `workspace_id` estable en tareas y logs,
+- exposicion de identidad desde API local,
+- migracion SQLite de storage schema `1 -> 2` para `instance_id`.
+
+## v0.7
+
+Los tests de Model Router viven en `tests/test_modeling_v07.py` y `tests/test_cli_model_v07.py`.
+
+Cubren:
+
+- contrato inicial de `ModelRouter` con `MockBackend`,
+- emision de eventos `model_route_selected` y `model_invocation_completed`,
+- desactivacion de auditoria con nivel `off`,
+- comandos `nox model list`, `nox model set`, `nox model limit` y `nox model route`,
+- comandos `nox audit status`, `nox audit level` y `nox audit off`.
 
 ## Comandos futuros posibles
 

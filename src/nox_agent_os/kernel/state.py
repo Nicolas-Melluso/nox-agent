@@ -36,6 +36,7 @@ class StateMachineKernel:
                 session_id=event.session_id,
                 trace_id=event.trace_id,
                 status=TaskStatus.CREATED,
+                instance_id=event.instance_id,
                 current_state={"created_at": event.timestamp.isoformat()},
             )
 

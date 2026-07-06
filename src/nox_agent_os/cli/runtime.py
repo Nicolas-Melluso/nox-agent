@@ -13,6 +13,7 @@ from nox_agent_os.governance import (
     RiskLevel,
 )
 from nox_agent_os.kernel import AgentKernel, EventRecord, EventType, JsonlEventStore
+from nox_agent_os.modeling import ModelConfigError, ModelWorkspaceConfig, load_model_config
 from nox_agent_os.workspace import Workspace, WorkspaceError, find_workspace
 
 
@@ -20,6 +21,7 @@ from nox_agent_os.workspace import Workspace, WorkspaceError, find_workspace
 class CliKernelContext:
     workspace: Workspace
     event_store: JsonlEventStore
+    model_config: ModelWorkspaceConfig
     kernel: AgentKernel
 
 
@@ -30,6 +32,10 @@ def load_kernel_context(path: Path | None = None) -> CliKernelContext:
         raise WorkspaceError("No Nox workspace found. Run: nox init")
 
     event_store = JsonlEventStore(workspace.event_log_path)
+    try:
+        model_config = load_model_config(workspace.model_config_path)
+    except ModelConfigError as exc:
+        raise WorkspaceError(str(exc)) from exc
     approval_queue = InMemoryApprovalQueue()
     kill_switch = KillSwitch()
     events = event_store.list_all()
@@ -40,6 +46,7 @@ def load_kernel_context(path: Path | None = None) -> CliKernelContext:
     return CliKernelContext(
         workspace=workspace,
         event_store=event_store,
+        model_config=model_config,
         kernel=AgentKernel(
             event_store=event_store,
             approval_queue=approval_queue,
@@ -65,6 +72,7 @@ def _restore_pending_approvals(
                 task_id=event.task_id,
                 trace_id=event.trace_id,
                 workspace_id=event.workspace_id,
+                instance_id=event.instance_id,
                 session_id=event.session_id,
                 actor=event.actor,
                 reason=str(event.payload.get("reason") or ""),
